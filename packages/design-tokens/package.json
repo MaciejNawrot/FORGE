@@ -1,0 +1,39 @@
+{
+  "name": "@acme/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./variables.css": "./dist/variables.css",
+    "./tailwind-preset": {
+      "types": "./dist/tailwind-preset.ts",
+      "default": "./dist/tailwind-preset.ts"
+    },
+    "./theme.native": {
+      "types": "./dist/theme.native.ts",
+      "default": "./dist/theme.native.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm tokens:build",
+    "tokens:build": "node scripts/build-tokens.mjs",
+    "dev": "node --watch scripts/build-tokens.mjs",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist .turbo"
+  },
+  "devDependencies": {
+    "@acme/config": "workspace:*",
+    "@types/node": "catalog:",
+    "style-dictionary": "5.5.1",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
