@@ -1,0 +1,16 @@
+{
+  "name": "@acme/config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    "./tsconfig/*": "./tsconfig/*.json"
+  },
+  "files": [
+    "tsconfig"
+  ],
+  "scripts": {
+    "lint": "biome check ."
+  }
+}
