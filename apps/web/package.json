@@ -17,6 +17,7 @@
     "@acme/api-client": "workspace:*",
     "@acme/contracts": "workspace:*",
     "@acme/design-tokens": "workspace:*",
+    "@acme/ui": "workspace:*",
     "@hookform/resolvers": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",

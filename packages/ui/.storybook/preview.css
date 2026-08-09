@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@acme/design-tokens/variables.css";
+@config "../tailwind.config.ts";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}

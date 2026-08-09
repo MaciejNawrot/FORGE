@@ -1,6 +1,7 @@
 'use client';
 
 import { createUserInputSchema } from '@acme/contracts';
+import { Button, Input, Stack, Text } from '@acme/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -27,41 +28,47 @@ export function CreateUserForm() {
     },
     onSuccess: () => {
       reset();
-      // The users list above is server-rendered; re-run the Server
-      // Component to pick up the newly created row.
+      // The users list is server-rendered; re-run the Server Component to
+      // pick up the newly created row.
       router.refresh();
     },
   });
 
   return (
-    <form
-      onSubmit={handleSubmit((values) => mutation.mutate(values))}
-      className="border-border flex flex-wrap items-end gap-3 rounded-lg border p-4"
-    >
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Name</span>
-        <input className="border-border rounded-md border px-3 py-2" {...register('name')} />
-        {errors.name && <span className="text-destructive text-sm">{errors.name.message}</span>}
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-sm">Email</span>
-        <input
-          type="email"
-          className="border-border rounded-md border px-3 py-2"
-          {...register('email')}
-        />
-        {errors.email && <span className="text-destructive text-sm">{errors.email.message}</span>}
-      </label>
-      <button
-        type="submit"
-        disabled={mutation.isPending}
-        className="bg-primary text-primary-foreground rounded-md px-3 py-2"
+    <form onSubmit={handleSubmit((values) => mutation.mutate(values))}>
+      <Stack
+        direction="row"
+        gap="sm"
+        align="end"
+        className="border-border flex-wrap rounded-lg border p-4"
       >
-        {mutation.isPending ? 'Adding…' : 'Add user'}
-      </button>
-      {mutation.isError && (
-        <p className="text-destructive w-full text-sm">{mutation.error.message}</p>
-      )}
+        <Stack gap="xs">
+          <Text variant="caption">Name</Text>
+          <Input placeholder="Ada Lovelace" {...register('name')} />
+          {errors.name && (
+            <Text variant="caption" tone="destructive">
+              {errors.name.message}
+            </Text>
+          )}
+        </Stack>
+        <Stack gap="xs">
+          <Text variant="caption">Email</Text>
+          <Input type="email" placeholder="ada@example.com" {...register('email')} />
+          {errors.email && (
+            <Text variant="caption" tone="destructive">
+              {errors.email.message}
+            </Text>
+          )}
+        </Stack>
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Adding…' : 'Add user'}
+        </Button>
+        {mutation.isError && (
+          <Text variant="caption" tone="destructive" className="w-full">
+            {mutation.error.message}
+          </Text>
+        )}
+      </Stack>
     </form>
   );
 }
