@@ -60,7 +60,7 @@ StyleDictionary.registerFormat({
     return `${HEADER}
 /** @type {import('tailwindcss').Config} */
 export const tailwindPreset = {
-	darkMode: ["class", '[data-theme="dark"]'],
+	darkMode: ["selector", '[data-theme="dark"]'] as ["selector", string],
 	theme: {
 		extend: {
 			colors: ${JSON.stringify(colors, null, 2)},
