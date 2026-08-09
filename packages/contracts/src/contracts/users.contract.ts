@@ -38,7 +38,7 @@ export const usersContract = c.router({
     path: '/users/:id',
     pathParams: userIdParamsSchema,
     body: updateUserInputSchema,
-    responses: { 200: userSchema, 404: errorResponseSchema },
+    responses: { 200: userSchema, 404: errorResponseSchema, 409: errorResponseSchema },
     summary: 'Update a user',
   },
   remove: {
