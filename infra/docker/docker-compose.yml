@@ -1,5 +1,9 @@
 name: gym0
 
+# Default (`docker compose up -d`) starts only the backing services, which is
+# what you want while running the apps locally with `pnpm dev`.
+# `--profile full` additionally builds and runs the app images.
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -30,6 +34,46 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  api:
+    profiles: ["full"]
+    build:
+      # Build context is the repo root so the Dockerfile can prune the workspace.
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/acme_dev
+      CORS_ORIGIN: http://localhost:3000
+      LOG_LEVEL: info
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-secret-change-me-to-a-random-32-char-value}
+      BETTER_AUTH_URL: http://localhost:3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # Read per request by the proxy route handler, so the same image works
+      # against any API host.
+      API_URL: http://api:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
 
 volumes:
   postgres-data:
