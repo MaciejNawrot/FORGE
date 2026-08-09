@@ -8,6 +8,13 @@
       "when": 1786261256278,
       "tag": "0000_youthful_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786277641128,
+      "tag": "0001_long_king_cobra",
+      "breakpoints": true
     }
   ]
 }

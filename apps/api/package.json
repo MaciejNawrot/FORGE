@@ -16,6 +16,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@acme/auth": "workspace:*",
     "@acme/contracts": "workspace:*",
     "@acme/db": "workspace:*",
     "@fastify/cors": "catalog:",

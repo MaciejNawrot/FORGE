@@ -19,7 +19,7 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
 
   await app.register(fastifyHelmet);
-  await app.register(fastifyCors, { origin: env.CORS_ORIGIN });
+  await app.register(fastifyCors, { origin: env.CORS_ORIGIN, credentials: true });
 
   const openApiDocument = generateOpenApi(
     contract,
