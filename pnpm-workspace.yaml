@@ -13,3 +13,10 @@ catalog:
   "@vitest/coverage-v8": 4.1.10
   "@types/node": 22.20.1
   tsup: 8.5.1
+  tsx: 4.23.11
+  drizzle-orm: 0.45.2
+  drizzle-kit: 0.31.10
+  postgres: 3.4.9
+  ioredis: 6.0.0
+  "@t3-oss/env-core": 0.13.11
+  dotenv: 17.4.2
