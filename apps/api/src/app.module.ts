@@ -8,8 +8,11 @@ import { popSetCookies } from './common/fastify-cookie-bridge.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { env } from './config/env.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { ExercisesModule } from './modules/exercises/exercises.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { TrainingModule } from './modules/training/training.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { WorkoutsModule } from './modules/workouts/workouts.module.js';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { UsersModule } from './modules/users/users.module.js';
     AuthModule,
     HealthModule,
     UsersModule,
+    WorkoutsModule,
+    ExercisesModule,
+    TrainingModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: HttpExceptionFilter }],
 })

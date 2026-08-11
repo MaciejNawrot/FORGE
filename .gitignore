@@ -40,3 +40,6 @@ test-results/
 *.pem
 .vercel
 next-env.d.ts
+
+# graphify
+graphify-out/

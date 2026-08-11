@@ -6,8 +6,8 @@ export const textVariants = cva('', {
   variants: {
     variant: {
       body: 'text-base',
-      heading: 'text-2xl font-semibold',
-      subheading: 'text-xl font-medium',
+      heading: 'text-2xl font-semibold tracking-tight',
+      subheading: 'text-xl font-medium tracking-tight',
       caption: 'text-sm',
       code: 'font-mono text-sm',
     },
