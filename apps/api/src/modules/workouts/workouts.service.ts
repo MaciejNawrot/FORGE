@@ -65,14 +65,15 @@ export class WorkoutsService {
     const plan = await this.workoutsRepository.findPlanById(planId, userId);
     if (!plan) return undefined;
     const position = await this.workoutsRepository.nextPosition(planId);
-    return this.workoutsRepository.addExercise({
+    const created = await this.workoutsRepository.addExercise({
       planId,
-      name: input.name,
+      exerciseId: input.exerciseId,
       sets: input.sets,
       reps: input.reps,
       weightKg: input.weightKg ?? null,
       position,
     });
+    return this.workoutsRepository.findExerciseById(created.id, planId);
   }
 
   async updateExercise(
@@ -83,7 +84,9 @@ export class WorkoutsService {
   ): Promise<WorkoutExercise | undefined> {
     const plan = await this.workoutsRepository.findPlanById(planId, userId);
     if (!plan) return undefined;
-    return this.workoutsRepository.updateExercise(exerciseId, planId, input);
+    const updated = await this.workoutsRepository.updateExercise(exerciseId, planId, input);
+    if (!updated) return undefined;
+    return this.workoutsRepository.findExerciseById(exerciseId, planId);
   }
 
   async removeExercise(planId: string, exerciseId: string, userId: string): Promise<boolean> {

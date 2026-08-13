@@ -1,16 +1,18 @@
 import type {
   Database,
+  ExerciseRow,
   NewWorkoutExerciseRow,
   NewWorkoutPlanRow,
   WorkoutExerciseRow,
   WorkoutPlanRow,
 } from '@acme/db';
-import { workoutExercises, workoutPlans } from '@acme/db';
+import { exercises, workoutExercises, workoutPlans } from '@acme/db';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, count, eq, max } from 'drizzle-orm';
 import { DATABASE } from '../../common/database/database.module.js';
 
 export type WorkoutPlanRowWithCount = WorkoutPlanRow & { exerciseCount: number };
+export type WorkoutExerciseWithExercise = WorkoutExerciseRow & { exercise: ExerciseRow };
 
 @Injectable()
 export class WorkoutsRepository {
@@ -39,7 +41,9 @@ export class WorkoutsRepository {
     return rows.map((row) => ({ ...row, exerciseCount: Number(row.exerciseCount) }));
   }
 
-  async listTemplates(): Promise<Array<WorkoutPlanRow & { exercises: WorkoutExerciseRow[] }>> {
+  async listTemplates(): Promise<
+    Array<WorkoutPlanRow & { exercises: WorkoutExerciseWithExercise[] }>
+  > {
     const templates = await this.db
       .select()
       .from(workoutPlans)
@@ -84,7 +88,7 @@ export class WorkoutsRepository {
         await tx.insert(workoutExercises).values(
           sourceExercises.map((exercise) => ({
             planId: plan.id,
-            name: exercise.name,
+            exerciseId: exercise.exerciseId,
             sets: exercise.sets,
             reps: exercise.reps,
             weightKg: exercise.weightKg,
@@ -106,10 +110,22 @@ export class WorkoutsRepository {
     return row;
   }
 
-  async listExercises(planId: string): Promise<WorkoutExerciseRow[]> {
+  async listExercises(planId: string): Promise<WorkoutExerciseWithExercise[]> {
     return this.db
-      .select()
+      .select({
+        id: workoutExercises.id,
+        planId: workoutExercises.planId,
+        exerciseId: workoutExercises.exerciseId,
+        sets: workoutExercises.sets,
+        reps: workoutExercises.reps,
+        weightKg: workoutExercises.weightKg,
+        position: workoutExercises.position,
+        createdAt: workoutExercises.createdAt,
+        updatedAt: workoutExercises.updatedAt,
+        exercise: exercises,
+      })
       .from(workoutExercises)
+      .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
       .where(eq(workoutExercises.planId, planId))
       .orderBy(asc(workoutExercises.position));
   }
@@ -155,7 +171,7 @@ export class WorkoutsRepository {
   async addExercise(
     input: Pick<
       NewWorkoutExerciseRow,
-      'planId' | 'name' | 'sets' | 'reps' | 'weightKg' | 'position'
+      'planId' | 'exerciseId' | 'sets' | 'reps' | 'weightKg' | 'position'
     >,
   ): Promise<WorkoutExerciseRow> {
     const [row] = await this.db.insert(workoutExercises).values(input).returning();
@@ -163,10 +179,25 @@ export class WorkoutsRepository {
     return row;
   }
 
-  async findExerciseById(id: string, planId: string): Promise<WorkoutExerciseRow | undefined> {
+  async findExerciseById(
+    id: string,
+    planId: string,
+  ): Promise<WorkoutExerciseWithExercise | undefined> {
     const [row] = await this.db
-      .select()
+      .select({
+        id: workoutExercises.id,
+        planId: workoutExercises.planId,
+        exerciseId: workoutExercises.exerciseId,
+        sets: workoutExercises.sets,
+        reps: workoutExercises.reps,
+        weightKg: workoutExercises.weightKg,
+        position: workoutExercises.position,
+        createdAt: workoutExercises.createdAt,
+        updatedAt: workoutExercises.updatedAt,
+        exercise: exercises,
+      })
       .from(workoutExercises)
+      .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
       .where(and(eq(workoutExercises.id, id), eq(workoutExercises.planId, planId)))
       .limit(1);
     return row;
@@ -175,7 +206,7 @@ export class WorkoutsRepository {
   async updateExercise(
     id: string,
     planId: string,
-    input: Partial<Pick<NewWorkoutExerciseRow, 'name' | 'sets' | 'reps' | 'weightKg'>>,
+    input: Partial<Pick<NewWorkoutExerciseRow, 'sets' | 'reps' | 'weightKg'>>,
   ): Promise<WorkoutExerciseRow | undefined> {
     const [row] = await this.db
       .update(workoutExercises)
