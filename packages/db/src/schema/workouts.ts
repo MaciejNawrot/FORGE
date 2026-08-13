@@ -11,6 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { user } from './auth.js';
+import { exercises } from './exercises.js';
 import { trainingTypes } from './training-types.js';
 
 export const workoutPlans = pgTable(
@@ -43,6 +44,7 @@ export const workoutExercises = pgTable(
     planId: uuid('plan_id')
       .notNull()
       .references(() => workoutPlans.id, { onDelete: 'cascade' }),
+    exerciseId: uuid('exercise_id').references(() => exercises.id),
     name: text('name').notNull(),
     sets: integer('sets').notNull(),
     reps: integer('reps').notNull(),

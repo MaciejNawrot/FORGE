@@ -3,6 +3,7 @@ import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from 'd
 import { user } from './auth.js';
 import { exercises } from './exercises.js';
 import { trainingTypes } from './training-types.js';
+import { workoutPlans } from './workouts.js';
 
 export const trainingSessions = pgTable(
   'training_sessions',
@@ -11,6 +12,7 @@ export const trainingSessions = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    planId: uuid('plan_id').references(() => workoutPlans.id, { onDelete: 'set null' }),
     // Plain date (no time) — a user can log more than one session per day,
     // so there is deliberately no unique constraint on (userId, date).
     date: date('date', { mode: 'string' }).notNull(),

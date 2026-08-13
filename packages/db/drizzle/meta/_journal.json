@@ -36,6 +36,13 @@
       "when": 1786543078849,
       "tag": "0004_stale_squirrel_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786631931065,
+      "tag": "0005_abnormal_lady_vermin",
+      "breakpoints": true
     }
   ]
 }
