@@ -74,7 +74,7 @@ export default async function TrackerPage() {
                           </span>
                         </div>
                       </div>
-                      <StartPlanButton planId={plan.id} />
+                      <StartPlanButton planId={plan.id} category={plan.category} />
                     </Card>
                   );
                 })}
