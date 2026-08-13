@@ -149,7 +149,7 @@ export function SessionDetail({
             {dict.activeTracking.start}
           </button>
         )}
-        {blocked && activeSession && (
+        {blocked && activeSession && !isThisSessionActive && (
           <Text tone="destructive" variant="caption">
             {dict.activeTracking.alreadyActive}{' '}
             <Link href={`/tracker/${activeSession.sessionId}`} className="underline">
