@@ -16,7 +16,7 @@ import { ExercisePicker } from '@/components/exercise-picker';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
 import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';
-import { unloggedPlanExercises } from '@/lib/plan-progress';
+import { prefillFrom, unloggedPlanExercises } from '@/lib/plan-progress';
 import { trainingTypeStyles } from '@/lib/training-colors';
 
 const REST_SECONDS = 90;
@@ -83,16 +83,17 @@ export function SessionDetail({
   const [weightKg, setWeightKg] = useState('');
 
   const notYetLogged = plan ? unloggedPlanExercises(plan.exercises, session.exercises) : [];
+  const planExerciseIds = plan?.exercises.map((exercise) => exercise.exercise.id) ?? [];
 
   const { data: suggestedLastPerformance } = useQuery({
-    queryKey: ['last-performance', 'suggested', notYetLogged.map((e) => e.exercise.id).join(',')],
+    queryKey: ['last-performance', 'suggested', plan?.id],
     queryFn: async () => {
       const result = await apiClient.training.lastPerformance({
-        query: { exerciseIds: notYetLogged.map((e) => e.exercise.id).join(',') },
+        query: { exerciseIds: planExerciseIds.join(',') },
       });
       return result.status === 200 ? result.body : [];
     },
-    enabled: notYetLogged.length > 0,
+    enabled: planExerciseIds.length > 0,
   });
 
   const removeSession = useMutation({
@@ -157,10 +158,10 @@ export function SessionDetail({
                   type="button"
                   onClick={() => {
                     setSelected(planExercise.exercise);
-                    setSets(last?.sets ?? planExercise.sets);
-                    setReps(last?.reps ?? planExercise.reps);
-                    const weight = last ? (last.weightKg ?? null) : (planExercise.weightKg ?? null);
-                    setWeightKg(weight == null ? '' : String(weight));
+                    const prefill = prefillFrom(planExercise, last);
+                    setSets(prefill.sets);
+                    setReps(prefill.reps);
+                    setWeightKg(prefill.weightKg);
                   }}
                   className="bg-muted hover:bg-accent flex w-full items-center justify-between gap-3 rounded-lg p-3 text-left transition-colors"
                 >

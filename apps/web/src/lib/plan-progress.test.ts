@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { unloggedPlanExercises } from './plan-progress';
+import { prefillFrom, unloggedPlanExercises } from './plan-progress';
 
 describe('unloggedPlanExercises', () => {
   it('keeps plan exercises with no matching logged entry', () => {
@@ -20,5 +20,27 @@ describe('unloggedPlanExercises', () => {
     const plan = [{ exercise: { id: 'a' } }, { exercise: { id: 'b' } }];
 
     expect(unloggedPlanExercises(plan, [])).toEqual(plan);
+  });
+});
+
+describe('prefillFrom', () => {
+  it('uses the plan target when there is no last-performance entry', () => {
+    const planExercise = { sets: 4, reps: 8, weightKg: 60 };
+
+    expect(prefillFrom(planExercise)).toEqual({ sets: 4, reps: 8, weightKg: '60' });
+  });
+
+  it('uses last performance when present, including a non-null weight', () => {
+    const planExercise = { sets: 4, reps: 8, weightKg: 60 };
+    const last = { sets: 3, reps: 10, weightKg: 45 };
+
+    expect(prefillFrom(planExercise, last)).toEqual({ sets: 3, reps: 10, weightKg: '45' });
+  });
+
+  it('treats a real last-performance entry with a null (bodyweight) weight as empty, not the plan target', () => {
+    const planExercise = { sets: 4, reps: 8, weightKg: 60 };
+    const last = { sets: 3, reps: 12, weightKg: null };
+
+    expect(prefillFrom(planExercise, last)).toEqual({ sets: 3, reps: 12, weightKg: '' });
   });
 });
