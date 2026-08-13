@@ -4,6 +4,7 @@ import type {
   AddTrainingSessionExerciseInput,
   Exercise,
   TrainingSessionWithExercises,
+  WorkoutPlanWithExercises,
 } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -61,7 +62,12 @@ function useCountdown(
   };
 }
 
-export function SessionDetail({ session }: { session: TrainingSessionWithExercises }) {
+export function SessionDetail({
+  session,
+}: {
+  session: TrainingSessionWithExercises;
+  plan?: WorkoutPlanWithExercises | null;
+}) {
   const router = useRouter();
   const { dict } = useLocale();
   const style = trainingTypeStyles[session.type];

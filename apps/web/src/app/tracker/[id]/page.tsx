@@ -19,9 +19,15 @@ export default async function TrainingSessionPage({ params }: PageProps<'/tracke
   }
   if (result.status === 404) notFound();
 
+  const session = result.body;
+  const planResult = session.planId
+    ? await apiClient.workouts.getPlan({ params: { id: session.planId } })
+    : null;
+  const plan = planResult && planResult.status === 200 ? planResult.body : null;
+
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <SessionDetail session={result.body} />
+      <SessionDetail session={session} plan={plan} />
     </main>
   );
 }
