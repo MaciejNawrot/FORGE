@@ -44,8 +44,9 @@ export const workoutExercises = pgTable(
     planId: uuid('plan_id')
       .notNull()
       .references(() => workoutPlans.id, { onDelete: 'cascade' }),
-    exerciseId: uuid('exercise_id').references(() => exercises.id),
-    name: text('name').notNull(),
+    exerciseId: uuid('exercise_id')
+      .notNull()
+      .references(() => exercises.id),
     sets: integer('sets').notNull(),
     reps: integer('reps').notNull(),
     weightKg: numeric('weight_kg', { precision: 6, scale: 2, mode: 'number' }),

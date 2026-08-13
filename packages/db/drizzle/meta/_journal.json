@@ -43,6 +43,13 @@
       "when": 1786631931065,
       "tag": "0005_abnormal_lady_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786632346346,
+      "tag": "0006_chilly_the_hand",
+      "breakpoints": true
     }
   ]
 }
