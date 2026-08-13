@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useActiveSession } from '@/lib/active-session-store';
 import { useLocale } from '@/lib/i18n/context';
 import { isNavLinkActive, primaryNavLinks } from '@/lib/nav-links';
 
 export function BottomNav() {
   const pathname = usePathname();
   const { dict } = useLocale();
+  const activeSession = useActiveSession();
 
   return (
     <>
@@ -16,6 +18,7 @@ export function BottomNav() {
         {primaryNavLinks.map(({ href, labelKey, icon: Icon }) => {
           const active = isNavLinkActive(pathname, href);
           const label = dict.nav[labelKey];
+          const showActiveBadge = href === '/tracker' && activeSession !== null;
           return (
             <Link
               key={href}
@@ -26,7 +29,15 @@ export function BottomNav() {
                   : 'text-muted-foreground hover:text-primary'
               }`}
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="relative">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                {showActiveBadge && (
+                  <span
+                    className="bg-primary absolute -top-0.5 -right-0.5 h-2 w-2 animate-pulse rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
               <span className="font-data text-[10px] uppercase">{label}</span>
             </Link>
           );
@@ -38,6 +49,7 @@ export function BottomNav() {
         {primaryNavLinks.map(({ href, labelKey, icon: Icon }) => {
           const active = isNavLinkActive(pathname, href);
           const label = dict.nav[labelKey];
+          const showActiveBadge = href === '/tracker' && activeSession !== null;
           return (
             <Link
               key={href}
@@ -49,7 +61,15 @@ export function BottomNav() {
                   : 'text-muted-foreground hover:bg-muted hover:text-primary'
               }`}
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="relative">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                {showActiveBadge && (
+                  <span
+                    className="bg-primary absolute -top-0.5 -right-0.5 h-2 w-2 animate-pulse rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
               <span className="sr-only">{label}</span>
             </Link>
           );
