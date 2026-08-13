@@ -442,7 +442,6 @@ async function main() {
       return {
         planId,
         exerciseId,
-        name: exercise.name,
         sets: exercise.sets,
         reps: exercise.reps,
         weightKg: exercise.weightKg,

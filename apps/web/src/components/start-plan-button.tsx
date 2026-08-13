@@ -42,7 +42,7 @@ export function StartPlanButton({ planId }: { planId: string }) {
       if (sessionResult.status !== 201) throw new Error(sessionResult.body.message);
       const session = sessionResult.body;
 
-      await Promise.all(
+      const exerciseResults = await Promise.all(
         plan.exercises.map((exercise) => {
           const last = lastPerformanceByExerciseId.get(exercise.exercise.id);
           return apiClient.training.addSessionExercise({
@@ -51,11 +51,13 @@ export function StartPlanButton({ planId }: { planId: string }) {
               exerciseId: exercise.exercise.id,
               sets: last?.sets ?? exercise.sets,
               reps: last?.reps ?? exercise.reps,
-              weightKg: last?.weightKg ?? exercise.weightKg ?? undefined,
+              weightKg: last ? (last.weightKg ?? undefined) : (exercise.weightKg ?? undefined),
             },
           });
         }),
       );
+      const failed = exerciseResults.find((result) => result.status !== 201);
+      if (failed) throw new Error(failed.body.message);
 
       return session;
     },
