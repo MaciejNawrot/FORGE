@@ -1,6 +1,7 @@
 import type {
   AddTrainingSessionExerciseInput,
   CreateTrainingSessionInput,
+  LastPerformanceEntry,
   TrainingSession,
   TrainingSessionExercise,
   TrainingSessionWithExercises,
@@ -26,6 +27,7 @@ export class TrainingService {
   async createSession(userId: string, input: CreateTrainingSessionInput): Promise<TrainingSession> {
     return this.trainingRepository.createSession({
       userId,
+      planId: input.planId ?? null,
       date: input.date,
       type: input.type,
       notes: input.notes ?? null,
@@ -59,5 +61,14 @@ export class TrainingService {
     const session = await this.trainingRepository.findSessionById(sessionId, userId);
     if (!session) return false;
     return this.trainingRepository.removeExercise(exerciseId, sessionId);
+  }
+
+  async getLastPerformance(userId: string, exerciseIds: string[]): Promise<LastPerformanceEntry[]> {
+    if (exerciseIds.length === 0) return [];
+    const map = await this.trainingRepository.lastPerformanceByExerciseIds(userId, exerciseIds);
+    return exerciseIds.flatMap((exerciseId) => {
+      const entry = map.get(exerciseId);
+      return entry ? [{ exerciseId, ...entry }] : [];
+    });
   }
 }

@@ -8,7 +8,7 @@ import type {
 } from '@acme/db';
 import { exercises, trainingSessionExercises, trainingSessions } from '@acme/db';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gte, lte, max } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, max } from 'drizzle-orm';
 import { DATABASE } from '../../common/database/database.module.js';
 
 export type TrainingSessionExerciseWithExercise = TrainingSessionExerciseRow & {
@@ -41,7 +41,7 @@ export class TrainingRepository {
   }
 
   async createSession(
-    input: Pick<NewTrainingSessionRow, 'userId' | 'date' | 'type' | 'notes'>,
+    input: Pick<NewTrainingSessionRow, 'userId' | 'planId' | 'date' | 'type' | 'notes'>,
   ): Promise<TrainingSessionRow> {
     const [row] = await this.db.insert(trainingSessions).values(input).returning();
     if (!row) throw new Error('Insert did not return a row');
@@ -130,5 +130,47 @@ export class TrainingRepository {
       )
       .returning({ id: trainingSessionExercises.id });
     return deleted.length > 0;
+  }
+
+  async lastPerformanceByExerciseIds(
+    userId: string,
+    exerciseIds: string[],
+  ): Promise<Map<string, { sets: number; reps: number; weightKg: number | null; date: string }>> {
+    const rows = await this.db
+      .select({
+        exerciseId: trainingSessionExercises.exerciseId,
+        sets: trainingSessionExercises.sets,
+        reps: trainingSessionExercises.reps,
+        weightKg: trainingSessionExercises.weightKg,
+        date: trainingSessions.date,
+        createdAt: trainingSessionExercises.createdAt,
+      })
+      .from(trainingSessionExercises)
+      .innerJoin(trainingSessions, eq(trainingSessions.id, trainingSessionExercises.sessionId))
+      .where(
+        and(
+          eq(trainingSessions.userId, userId),
+          inArray(trainingSessionExercises.exerciseId, exerciseIds),
+        ),
+      )
+      .orderBy(desc(trainingSessions.date), desc(trainingSessionExercises.createdAt));
+
+    const result = new Map<
+      string,
+      { sets: number; reps: number; weightKg: number | null; date: string }
+    >();
+    for (const row of rows) {
+      // Rows are ordered most-recent-first, so the first row seen per
+      // exercise id is that exercise's most recent logged performance.
+      if (!result.has(row.exerciseId)) {
+        result.set(row.exerciseId, {
+          sets: row.sets,
+          reps: row.reps,
+          weightKg: row.weightKg,
+          date: row.date,
+        });
+      }
+    }
+    return result;
   }
 }

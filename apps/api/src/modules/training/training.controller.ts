@@ -22,6 +22,12 @@ export class TrainingController {
         return { status: 200, body: sessions };
       },
 
+      lastPerformance: async ({ query }) => {
+        const exerciseIds = query.exerciseIds.split(',');
+        const entries = await this.trainingService.getLastPerformance(userId, exerciseIds);
+        return { status: 200, body: entries };
+      },
+
       getSession: async ({ params }) => {
         const session = await this.trainingService.getSession(params.id, userId);
         if (!session) return { status: 404, body: { message: 'Training session not found' } };
