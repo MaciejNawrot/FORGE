@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { exerciseSchema } from './exercise.schema.js';
 import { trainingTypeSchema } from './training.schema.js';
 
 export const workoutExerciseSchema = z.object({
   id: z.string().uuid(),
   planId: z.string().uuid(),
-  name: z.string().min(1).max(120),
+  exercise: exerciseSchema,
   sets: z.number().int().min(1).max(50),
   reps: z.number().int().min(1).max(500),
   weightKg: z.coerce.number().min(0).max(1000).nullable(),
@@ -15,14 +16,18 @@ export const workoutExerciseSchema = z.object({
 export type WorkoutExercise = z.infer<typeof workoutExerciseSchema>;
 
 export const createWorkoutExerciseInputSchema = z.object({
-  name: z.string().min(1).max(120),
+  exerciseId: z.string().uuid(),
   sets: z.number().int().min(1).max(50),
   reps: z.number().int().min(1).max(500),
   weightKg: z.number().min(0).max(1000).nullable().optional(),
 });
 export type CreateWorkoutExerciseInput = z.infer<typeof createWorkoutExerciseInputSchema>;
 
-export const updateWorkoutExerciseInputSchema = createWorkoutExerciseInputSchema.partial();
+export const updateWorkoutExerciseInputSchema = z.object({
+  sets: z.number().int().min(1).max(50).optional(),
+  reps: z.number().int().min(1).max(500).optional(),
+  weightKg: z.number().min(0).max(1000).nullable().optional(),
+});
 export type UpdateWorkoutExerciseInput = z.infer<typeof updateWorkoutExerciseInputSchema>;
 
 export const workoutPlanSchema = z.object({

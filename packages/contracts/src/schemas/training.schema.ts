@@ -30,6 +30,7 @@ export type AddTrainingSessionExerciseInput = z.infer<typeof addTrainingSessionE
 export const trainingSessionSchema = z.object({
   id: z.string().uuid(),
   userId: z.string(),
+  planId: z.string().uuid().nullable(),
   date: z.string(),
   type: trainingTypeSchema,
   notes: z.string().nullable(),
@@ -47,6 +48,7 @@ export const createTrainingSessionInputSchema = z.object({
   date: z.string().regex(isoDatePattern, 'Expected YYYY-MM-DD'),
   type: trainingTypeSchema,
   notes: z.string().max(2000).nullable().optional(),
+  planId: z.string().uuid().nullable().optional(),
 });
 export type CreateTrainingSessionInput = z.infer<typeof createTrainingSessionInputSchema>;
 
@@ -71,3 +73,18 @@ export const trainingSessionExerciseParamsSchema = z.object({
   exerciseId: z.string().uuid(),
 });
 export type TrainingSessionExerciseParams = z.infer<typeof trainingSessionExerciseParamsSchema>;
+
+export const lastPerformanceEntrySchema = z.object({
+  exerciseId: z.string().uuid(),
+  sets: z.number().int().min(1).max(50),
+  reps: z.number().int().min(1).max(500),
+  weightKg: z.coerce.number().min(0).max(1000).nullable(),
+  date: z.string(),
+});
+export type LastPerformanceEntry = z.infer<typeof lastPerformanceEntrySchema>;
+
+export const lastPerformanceQuerySchema = z.object({
+  // Comma-separated exercise ids, e.g. "id-1,id-2".
+  exerciseIds: z.string().min(1),
+});
+export type LastPerformanceQuery = z.infer<typeof lastPerformanceQuerySchema>;

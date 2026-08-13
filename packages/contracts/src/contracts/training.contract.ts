@@ -4,6 +4,8 @@ import { errorResponseSchema } from '../schemas/error.schema.js';
 import {
   addTrainingSessionExerciseInputSchema,
   createTrainingSessionInputSchema,
+  lastPerformanceEntrySchema,
+  lastPerformanceQuerySchema,
   listTrainingSessionsQuerySchema,
   sessionIdParamsSchema,
   trainingSessionExerciseParamsSchema,
@@ -22,6 +24,13 @@ export const trainingContract = c.router({
     query: listTrainingSessionsQuerySchema,
     responses: { 200: z.array(trainingSessionSchema), 401: errorResponseSchema },
     summary: "List the current user's training sessions in a date range",
+  },
+  lastPerformance: {
+    method: 'GET',
+    path: '/training-sessions/exercises/last-performance',
+    query: lastPerformanceQuerySchema,
+    responses: { 200: z.array(lastPerformanceEntrySchema), 401: errorResponseSchema },
+    summary: "Get the current user's most recent logged performance per exercise",
   },
   getSession: {
     method: 'GET',
