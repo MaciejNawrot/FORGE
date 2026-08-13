@@ -99,7 +99,7 @@ export function WorkoutTemplateDetail({ template }: WorkoutTemplateDetailProps) 
                 <div className="bg-primary absolute top-0 left-0 h-full w-1" />
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <Text className="font-display text-lg uppercase">{exercise.name}</Text>
+                    <Text className="font-display text-lg uppercase">{exercise.exercise.name}</Text>
                     <Text tone="muted" variant="caption" className="font-data mt-1">
                       {dict.templateDetail.setsReps(
                         exercise.sets,
