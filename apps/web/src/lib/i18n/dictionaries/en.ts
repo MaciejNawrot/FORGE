@@ -151,6 +151,9 @@ export const en = {
 
   activeTracking: {
     duration: 'Active Workout Duration',
+    start: 'Start',
+    alreadyActive: 'You already have an active training in progress.',
+    goToActive: 'Go to it',
     logSet: 'Log Set',
     previousSets: 'Previous Sets',
     resting: 'Resting…',

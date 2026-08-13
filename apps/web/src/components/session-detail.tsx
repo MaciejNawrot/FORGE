@@ -9,10 +9,12 @@ import type {
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Flag, Timer, Trash2, X } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ConfirmButton } from '@/components/confirm-button';
 import { ExercisePicker } from '@/components/exercise-picker';
+import { useActiveSession, useActiveSessionStore } from '@/lib/active-session-store';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
 import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';
@@ -21,17 +23,25 @@ import { trainingTypeStyles } from '@/lib/training-colors';
 
 const REST_SECONDS = 90;
 
-function useElapsedTime(since: Date | string): string {
+function useElapsedTime(since: Date | string | number | null): string {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
+    if (since == null) return;
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [since]);
+
+  if (since == null) return '0:00';
 
   // Crossing the Server -> Client Component boundary serializes `Date` props
   // to plain ISO strings, so this can't assume `since` is still a `Date`.
-  const sinceMs = since instanceof Date ? since.getTime() : new Date(since).getTime();
+  const sinceMs =
+    typeof since === 'number'
+      ? since
+      : since instanceof Date
+        ? since.getTime()
+        : new Date(since).getTime();
   const elapsed = Math.max(0, Math.floor((now - sinceMs) / 1000));
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
@@ -73,7 +83,23 @@ export function SessionDetail({
   const router = useRouter();
   const { dict } = useLocale();
   const style = trainingTypeStyles[session.type];
-  const duration = useElapsedTime(session.createdAt);
+  const activeSession = useActiveSession();
+  const isThisSessionActive = activeSession !== null && activeSession.sessionId === session.id;
+  const duration = useElapsedTime(
+    activeSession && isThisSessionActive ? activeSession.startedAt : null,
+  );
+  const start = useActiveSessionStore((state) => state.start);
+  const end = useActiveSessionStore((state) => state.end);
+  const [blocked, setBlocked] = useState(false);
+
+  const handleStart = () => {
+    if (activeSession && activeSession.sessionId !== session.id) {
+      setBlocked(true);
+      return;
+    }
+    setBlocked(false);
+    start(session.id);
+  };
   const [resting, setResting] = useState(false);
   const [editingRest, setEditingRest] = useState(false);
   const rest = useCountdown(resting, REST_SECONDS);
@@ -110,9 +136,27 @@ export function SessionDetail({
         <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
           {dict.activeTracking.duration}
         </Text>
-        <span className="font-display text-glow-primary text-primary text-6xl tabular-nums">
-          {duration}
-        </span>
+        {isThisSessionActive ? (
+          <span className="font-display text-glow-primary text-primary text-6xl tabular-nums">
+            {duration}
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={handleStart}
+            className="bg-primary text-primary-foreground font-display glow-primary rounded-full px-8 py-3 text-2xl uppercase tracking-wider transition-colors active:scale-95"
+          >
+            {dict.activeTracking.start}
+          </button>
+        )}
+        {blocked && activeSession && (
+          <Text tone="destructive" variant="caption">
+            {dict.activeTracking.alreadyActive}{' '}
+            <Link href={`/tracker/${activeSession.sessionId}`} className="underline">
+              {dict.activeTracking.goToActive}
+            </Link>
+          </Text>
+        )}
         <div className="flex items-center gap-2">
           <span className={`font-data rounded-full px-2 py-0.5 text-xs uppercase ${style.badge}`}>
             {dict.trainingType[session.type]} · {session.date}
@@ -285,7 +329,10 @@ export function SessionDetail({
           title={dict.sessionDetail.finishTitle}
           description={dict.sessionDetail.finishDescription}
           confirmLabel={dict.common.finish}
-          onConfirm={() => router.push('/tracker')}
+          onConfirm={() => {
+            if (isThisSessionActive) end();
+            router.push('/tracker');
+          }}
           className="border-primary text-primary font-display shrink-0 gap-2 rounded-full uppercase"
         >
           <Flag className="h-4 w-4" fill="currentColor" aria-hidden="true" />

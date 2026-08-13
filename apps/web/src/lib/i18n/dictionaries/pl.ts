@@ -161,6 +161,9 @@ export const pl: Dictionary = {
 
   activeTracking: {
     duration: 'Czas trwania treningu',
+    start: 'Rozpocznij',
+    alreadyActive: 'Masz już aktywny trening w toku.',
+    goToActive: 'Przejdź do niego',
     logSet: 'Zapisz serię',
     previousSets: 'Poprzednie serie',
     resting: 'Odpoczynek…',
