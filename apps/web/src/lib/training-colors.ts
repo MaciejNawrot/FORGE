@@ -1,14 +1,11 @@
 import type { TrainingTypeValue } from '@acme/contracts';
 
-/** Reuses existing semantic design tokens — no new palette needed. */
-export const trainingTypeStyles: Record<
-  TrainingTypeValue,
-  { label: string; dot: string; badge: string }
-> = {
-  strength: { label: 'Strength', dot: 'bg-primary', badge: 'bg-primary/15 text-primary' },
-  cardio: { label: 'Cardio', dot: 'bg-destructive', badge: 'bg-destructive/15 text-destructive' },
-  mobility: { label: 'Mobility', dot: 'bg-success', badge: 'bg-success/15 text-success' },
-  rest: { label: 'Rest', dot: 'bg-muted-foreground', badge: 'bg-muted text-muted-foreground' },
+/** Reuses existing semantic design tokens — no new palette needed. Labels live in the i18n dictionary. */
+export const trainingTypeStyles: Record<TrainingTypeValue, { dot: string; badge: string }> = {
+  strength: { dot: 'bg-primary', badge: 'bg-primary/15 text-primary' },
+  cardio: { dot: 'bg-destructive', badge: 'bg-destructive/15 text-destructive' },
+  mobility: { dot: 'bg-success', badge: 'bg-success/15 text-success' },
+  rest: { dot: 'bg-muted-foreground', badge: 'bg-muted text-muted-foreground' },
 };
 
 export const trainingTypes: TrainingTypeValue[] = ['strength', 'cardio', 'mobility', 'rest'];

@@ -29,6 +29,13 @@
       "when": 1786475373508,
       "tag": "0003_marvelous_photon",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786543078849,
+      "tag": "0004_stale_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

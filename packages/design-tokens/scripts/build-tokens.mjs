@@ -149,33 +149,46 @@ async function buildTailwindPreset() {
   await sd.buildAllPlatforms();
 }
 
+// Every color mode besides `light` (the `:root` base) gets its own
+// `[data-theme="<mode>"]` override block — add a theme by adding a key
+// under `color` in tokens.json, nothing here needs to change.
+const overrideModes = Object.keys(raw.color).filter((mode) => mode !== 'light');
+
 function mergeCssVariables() {
   const light = readFileSync(`${distDir}/_variables.light.css`, 'utf8');
-  const dark = readFileSync(`${distDir}/_variables.dark.css`, 'utf8');
-  writeFileSync(`${distDir}/variables.css`, `${HEADER}\n${light}\n${dark}`);
+  const overrides = overrideModes.map((mode) =>
+    readFileSync(`${distDir}/_variables.${mode}.css`, 'utf8'),
+  );
+  writeFileSync(`${distDir}/variables.css`, `${HEADER}\n${light}\n${overrides.join('\n')}`);
   rmSync(`${distDir}/_variables.light.css`);
-  rmSync(`${distDir}/_variables.dark.css`);
+  for (const mode of overrideModes) rmSync(`${distDir}/_variables.${mode}.css`);
 }
 
 function mergeNativeTheme() {
   const light = JSON.parse(readFileSync(`${distDir}/_theme.light.json`, 'utf8'));
-  const dark = JSON.parse(readFileSync(`${distDir}/_theme.dark.json`, 'utf8'));
+  const overrides = overrideModes.map((mode) => [
+    mode,
+    JSON.parse(readFileSync(`${distDir}/_theme.${mode}.json`, 'utf8')),
+  ]);
   const content = `${HEADER}
 /**
  * NativeWind CSS-variable maps. Register the active set at your app root with
- * NativeWind's \`vars()\` helper, e.g. \`<View style={vars(isDark ? darkVars : lightVars)}>\`.
+ * NativeWind's \`vars()\` helper, e.g. \`<View style={vars(nativeTheme[name])}>\`.
  */
 export const lightVars = ${JSON.stringify(light, null, 2)} as const;
 
-export const darkVars = ${JSON.stringify(dark, null, 2)} as const;
+${overrides.map(([mode, vars]) => `export const ${mode}Vars = ${JSON.stringify(vars, null, 2)} as const;`).join('\n\n')}
 
-export const nativeTheme = { light: lightVars, dark: darkVars } as const;
+export const nativeTheme = {
+  light: lightVars,
+${overrides.map(([mode]) => `  ${mode}: ${mode}Vars,`).join('\n')}
+} as const;
 
 export default nativeTheme;
 `;
   writeFileSync(`${distDir}/theme.native.ts`, content);
   rmSync(`${distDir}/_theme.light.json`);
-  rmSync(`${distDir}/_theme.dark.json`);
+  for (const mode of overrideModes) rmSync(`${distDir}/_theme.${mode}.json`);
 }
 
 export async function buildTokens() {
@@ -183,11 +196,15 @@ export async function buildTokens() {
   mkdirSync(distDir, { recursive: true });
 
   await buildCss('light', ':root', (token) => token.path[0] !== 'palette');
-  await buildCss('dark', '[data-theme="dark"]', (token) => token.path[0] === 'color');
+  for (const mode of overrideModes) {
+    await buildCss(mode, `[data-theme="${mode}"]`, (token) => token.path[0] === 'color');
+  }
   mergeCssVariables();
 
   await buildNativeColors('light');
-  await buildNativeColors('dark');
+  for (const mode of overrideModes) {
+    await buildNativeColors(mode);
+  }
   mergeNativeTheme();
 
   await buildTailwindPreset();

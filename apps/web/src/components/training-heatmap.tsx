@@ -1,4 +1,7 @@
+'use client';
+
 import type { TrainingSession } from '@acme/contracts';
+import { useLocale } from '@/lib/i18n/context';
 import { toLocalIsoDate, trainingTypeStyles, trainingTypes } from '@/lib/training-colors';
 
 type Day = { date: string; sessions: TrainingSession[] };
@@ -34,6 +37,7 @@ function buildWeeks(sessions: TrainingSession[]): Day[][] {
 }
 
 export function TrainingHeatmap({ sessions }: { sessions: TrainingSession[] }) {
+  const { dict } = useLocale();
   const weeks = buildWeeks(sessions);
 
   return (
@@ -45,7 +49,7 @@ export function TrainingHeatmap({ sessions }: { sessions: TrainingSession[] }) {
               const dominant = day.sessions[0]?.type;
               const style = dominant ? trainingTypeStyles[dominant] : undefined;
               const title = day.sessions.length
-                ? `${day.date}: ${day.sessions.map((s) => trainingTypeStyles[s.type].label).join(', ')}`
+                ? `${day.date}: ${day.sessions.map((s) => dict.trainingType[s.type]).join(', ')}`
                 : day.date;
               return (
                 <div
@@ -62,7 +66,7 @@ export function TrainingHeatmap({ sessions }: { sessions: TrainingSession[] }) {
         {trainingTypes.map((type) => (
           <div key={type} className="flex items-center gap-1.5">
             <span className={`h-2.5 w-2.5 rounded-full ${trainingTypeStyles[type].dot}`} />
-            <span className="text-muted-foreground text-xs">{trainingTypeStyles[type].label}</span>
+            <span className="text-muted-foreground text-xs">{dict.trainingType[type]}</span>
           </div>
         ))}
       </div>

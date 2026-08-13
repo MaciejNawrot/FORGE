@@ -8,12 +8,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { apiClient } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/context';
 import { sessionQueryKey } from '@/lib/use-session';
 
 type LoginFormValues = z.infer<typeof loginInputSchema>;
 type RegisterFormValues = z.infer<typeof registerInputSchema>;
 
 export default function LoginPage() {
+  const { dict } = useLocale();
   const [mode, setMode] = useState<'login' | 'register'>('login');
 
   return (
@@ -24,14 +26,14 @@ export default function LoginPage() {
           onClick={() => setMode('login')}
           className={mode === 'login' ? 'font-semibold' : 'text-muted-foreground'}
         >
-          Log in
+          {dict.common.logIn}
         </button>
         <button
           type="button"
           onClick={() => setMode('register')}
           className={mode === 'register' ? 'font-semibold' : 'text-muted-foreground'}
         >
-          Register
+          {dict.login.register}
         </button>
       </div>
       {mode === 'login' ? <LoginForm /> : <RegisterForm />}
@@ -41,6 +43,7 @@ export default function LoginPage() {
 
 function LoginForm() {
   const router = useRouter();
+  const { dict } = useLocale();
   const queryClient = useQueryClient();
   const {
     register,
@@ -66,7 +69,7 @@ function LoginForm() {
       className="flex flex-col gap-3"
     >
       <label className="flex flex-col gap-1">
-        <span className="text-sm">Email</span>
+        <span className="text-sm">{dict.common.email}</span>
         <input
           type="email"
           className="border-border rounded-md border px-3 py-2"
@@ -75,7 +78,7 @@ function LoginForm() {
         {errors.email && <span className="text-destructive text-sm">{errors.email.message}</span>}
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm">Password</span>
+        <span className="text-sm">{dict.common.password}</span>
         <input
           type="password"
           className="border-border rounded-md border px-3 py-2"
@@ -91,7 +94,7 @@ function LoginForm() {
         disabled={mutation.isPending}
         className="bg-primary text-primary-foreground rounded-md px-3 py-2"
       >
-        {mutation.isPending ? 'Logging in…' : 'Log in'}
+        {mutation.isPending ? dict.login.loggingIn : dict.common.logIn}
       </button>
     </form>
   );
@@ -99,6 +102,7 @@ function LoginForm() {
 
 function RegisterForm() {
   const router = useRouter();
+  const { dict } = useLocale();
   const queryClient = useQueryClient();
   const {
     register,
@@ -124,12 +128,12 @@ function RegisterForm() {
       className="flex flex-col gap-3"
     >
       <label className="flex flex-col gap-1">
-        <span className="text-sm">Name</span>
+        <span className="text-sm">{dict.common.personName}</span>
         <input className="border-border rounded-md border px-3 py-2" {...register('name')} />
         {errors.name && <span className="text-destructive text-sm">{errors.name.message}</span>}
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm">Email</span>
+        <span className="text-sm">{dict.common.email}</span>
         <input
           type="email"
           className="border-border rounded-md border px-3 py-2"
@@ -138,7 +142,7 @@ function RegisterForm() {
         {errors.email && <span className="text-destructive text-sm">{errors.email.message}</span>}
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm">Password</span>
+        <span className="text-sm">{dict.common.password}</span>
         <input
           type="password"
           className="border-border rounded-md border px-3 py-2"
@@ -154,7 +158,7 @@ function RegisterForm() {
         disabled={mutation.isPending}
         className="bg-primary text-primary-foreground rounded-md px-3 py-2"
       >
-        {mutation.isPending ? 'Creating account…' : 'Register'}
+        {mutation.isPending ? dict.login.creatingAccount : dict.login.register}
       </button>
     </form>
   );

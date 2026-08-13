@@ -11,6 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { user } from './auth.js';
+import { trainingTypes } from './training-types.js';
 
 export const workoutPlans = pgTable(
   'workout_plans',
@@ -21,6 +22,8 @@ export const workoutPlans = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     notes: text('notes'),
+    // Reuses the training-session type enum for the library's category filter.
+    category: text('category', { enum: trainingTypes }),
     // Global, browsable routines seeded into the app — not owned by any one
     // user's "my plans" list. Forking copies one into a real user-owned plan.
     isTemplate: boolean('is_template').notNull().default(false),

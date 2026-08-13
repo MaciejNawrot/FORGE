@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { apiClient } from '@/lib/api-client';
-import { toLocalIsoDate, trainingTypeStyles, trainingTypes } from '@/lib/training-colors';
+import { useLocale } from '@/lib/i18n/context';
+import { toLocalIsoDate, trainingTypes } from '@/lib/training-colors';
 
 type FormValues = z.infer<typeof createTrainingSessionInputSchema>;
 
@@ -18,6 +19,7 @@ function todayIso(): string {
 
 export function AddTrainingForm() {
   const router = useRouter();
+  const { dict } = useLocale();
   const {
     register,
     handleSubmit,
@@ -40,31 +42,26 @@ export function AddTrainingForm() {
 
   return (
     <form onSubmit={handleSubmit((values) => mutation.mutate(values))}>
-      <Stack
-        direction="row"
-        gap="sm"
-        align="end"
-        className="border-border flex-wrap rounded-lg border p-4"
-      >
+      <Stack direction="row" gap="sm" align="end" className="glass-panel flex-wrap rounded-lg p-4">
         <Stack gap="xs">
-          <Text variant="caption">Date</Text>
+          <Text variant="caption">{dict.common.date}</Text>
           <Input type="date" max={todayIso()} {...register('date')} />
         </Stack>
         <Stack gap="xs">
-          <Text variant="caption">Type</Text>
+          <Text variant="caption">{dict.common.type}</Text>
           <select
             className="border-border bg-background text-foreground h-10 rounded-md border px-3 text-base"
             {...register('type')}
           >
             {trainingTypes.map((type) => (
               <option key={type} value={type}>
-                {trainingTypeStyles[type].label}
+                {dict.trainingType[type]}
               </option>
             ))}
           </select>
         </Stack>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Logging…' : 'Log training'}
+          {mutation.isPending ? dict.common.logging : dict.addTrainingForm.submit}
         </Button>
         {(errors.date || mutation.isError) && (
           <Text variant="caption" tone="destructive" className="w-full">

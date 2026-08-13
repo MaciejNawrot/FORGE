@@ -8,11 +8,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { apiClient } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/context';
 
 type FormValues = z.infer<typeof createWorkoutPlanInputSchema>;
 
 export function CreatePlanForm() {
   const router = useRouter();
+  const { dict } = useLocale();
   const {
     register,
     handleSubmit,
@@ -36,15 +38,10 @@ export function CreatePlanForm() {
 
   return (
     <form onSubmit={handleSubmit((values) => mutation.mutate(values))}>
-      <Stack
-        direction="row"
-        gap="sm"
-        align="end"
-        className="border-border flex-wrap rounded-lg border p-4"
-      >
+      <Stack direction="row" gap="sm" align="end" className="glass-panel flex-wrap rounded-lg p-4">
         <Stack gap="xs">
-          <Text variant="caption">Plan name</Text>
-          <Input placeholder="Push Day" {...register('name')} />
+          <Text variant="caption">{dict.common.name}</Text>
+          <Input placeholder={dict.createPlanForm.namePlaceholder} {...register('name')} />
           {errors.name && (
             <Text variant="caption" tone="destructive">
               {errors.name.message}
@@ -52,7 +49,7 @@ export function CreatePlanForm() {
           )}
         </Stack>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Adding…' : 'Add plan'}
+          {mutation.isPending ? dict.common.adding : dict.createPlanForm.submit}
         </Button>
         {mutation.isError && (
           <Text variant="caption" tone="destructive" className="w-full">

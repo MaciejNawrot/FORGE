@@ -5,8 +5,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { EquipmentIcon } from '@/components/equipment-icon';
 import { apiClient } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/context';
 
 export default function ExercisesPage() {
+  const { dict } = useLocale();
   const [search, setSearch] = useState('');
 
   const { data, isPending } = useQuery({
@@ -22,16 +24,16 @@ export default function ExercisesPage() {
   return (
     <main className="mx-auto max-w-2xl p-6">
       <Stack gap="lg">
-        <Text variant="heading">Exercise Library</Text>
+        <Text variant="heading">{dict.exercises.title}</Text>
         <Input
-          placeholder="Search exercises…"
+          placeholder={dict.common.searchExercises}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
         <Stack gap="sm">
-          {isPending && <Text tone="muted">Loading…</Text>}
+          {isPending && <Text tone="muted">{dict.common.loading}</Text>}
           {!isPending && data?.length === 0 && (
-            <Text tone="muted">No exercises match "{search}".</Text>
+            <Text tone="muted">{dict.common.noExercisesMatch(search)}</Text>
           )}
           {data?.map((exercise) => (
             <Card key={exercise.id}>

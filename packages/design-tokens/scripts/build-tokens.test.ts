@@ -8,7 +8,7 @@ describe('modeTree', () => {
     const dark = modeTree('dark');
 
     expect(light.color.background.$value).toBe('{palette.neutral.0}');
-    expect(dark.color.background.$value).toBe('{palette.neutral.950}');
+    expect(dark.color.background.$value).toBe('#0a0a0a');
     expect(light.spacing).toBe(dark.spacing);
     expect(light.palette).toBe(dark.palette);
   });

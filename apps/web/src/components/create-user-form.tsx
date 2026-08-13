@@ -8,11 +8,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { apiClient } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/context';
 
 type FormValues = z.infer<typeof createUserInputSchema>;
 
 export function CreateUserForm() {
   const router = useRouter();
+  const { dict } = useLocale();
   const {
     register,
     handleSubmit,
@@ -43,7 +45,7 @@ export function CreateUserForm() {
         className="border-border flex-wrap rounded-lg border p-4"
       >
         <Stack gap="xs">
-          <Text variant="caption">Name</Text>
+          <Text variant="caption">{dict.common.personName}</Text>
           <Input placeholder="Ada Lovelace" {...register('name')} />
           {errors.name && (
             <Text variant="caption" tone="destructive">
@@ -52,7 +54,7 @@ export function CreateUserForm() {
           )}
         </Stack>
         <Stack gap="xs">
-          <Text variant="caption">Email</Text>
+          <Text variant="caption">{dict.common.email}</Text>
           <Input type="email" placeholder="ada@example.com" {...register('email')} />
           {errors.email && (
             <Text variant="caption" tone="destructive">
@@ -61,7 +63,7 @@ export function CreateUserForm() {
           )}
         </Stack>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Adding…' : 'Add user'}
+          {mutation.isPending ? dict.common.adding : dict.createUserForm.submit}
         </Button>
         {mutation.isError && (
           <Text variant="caption" tone="destructive" className="w-full">

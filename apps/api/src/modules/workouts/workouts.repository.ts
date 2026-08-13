@@ -23,6 +23,7 @@ export class WorkoutsRepository {
         userId: workoutPlans.userId,
         name: workoutPlans.name,
         notes: workoutPlans.notes,
+        category: workoutPlans.category,
         isTemplate: workoutPlans.isTemplate,
         forkedFromId: workoutPlans.forkedFromId,
         createdAt: workoutPlans.createdAt,
@@ -73,6 +74,7 @@ export class WorkoutsRepository {
           userId,
           name: template.name,
           notes: template.notes,
+          category: template.category,
           forkedFromId: template.id,
         })
         .returning();
@@ -113,7 +115,7 @@ export class WorkoutsRepository {
   }
 
   async createPlan(
-    input: Pick<NewWorkoutPlanRow, 'userId' | 'name' | 'notes'>,
+    input: Pick<NewWorkoutPlanRow, 'userId' | 'name' | 'notes' | 'category'>,
   ): Promise<WorkoutPlanRow> {
     const [row] = await this.db.insert(workoutPlans).values(input).returning();
     if (!row) throw new Error('Insert did not return a row');
@@ -123,7 +125,7 @@ export class WorkoutsRepository {
   async updatePlan(
     id: string,
     userId: string,
-    input: Partial<Pick<NewWorkoutPlanRow, 'name' | 'notes'>>,
+    input: Partial<Pick<NewWorkoutPlanRow, 'name' | 'notes' | 'category'>>,
   ): Promise<WorkoutPlanRow | undefined> {
     const [row] = await this.db
       .update(workoutPlans)

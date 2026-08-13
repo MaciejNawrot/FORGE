@@ -4,9 +4,11 @@ import { Button } from '@acme/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/context';
 
 export function ForkTemplateButton({ templateId }: { templateId: string }) {
   const router = useRouter();
+  const { dict } = useLocale();
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -19,7 +21,7 @@ export function ForkTemplateButton({ templateId }: { templateId: string }) {
 
   return (
     <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-      {mutation.isPending ? 'Adding…' : 'Add to my plans'}
+      {mutation.isPending ? dict.common.adding : dict.forkTemplate.cta}
     </Button>
   );
 }

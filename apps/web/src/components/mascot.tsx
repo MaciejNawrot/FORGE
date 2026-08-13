@@ -1,36 +1,12 @@
+'use client';
+
+import { useLocale } from '@/lib/i18n/context';
+
 const levels = [
-  {
-    min: 0,
-    name: 'Newbie',
-    tip: "Let's get moving — log your first training!",
-    armRx: 7,
-    abs: false,
-    dumbbell: false,
-  },
-  {
-    min: 3,
-    name: 'Getting There',
-    tip: "Nice, you're building a streak.",
-    armRx: 9,
-    abs: false,
-    dumbbell: false,
-  },
-  {
-    min: 8,
-    name: 'Consistent',
-    tip: 'Solid consistency — keep it up!',
-    armRx: 11.5,
-    abs: true,
-    dumbbell: false,
-  },
-  {
-    min: 16,
-    name: 'Absolute Unit',
-    tip: "You're an absolute unit. Respect.",
-    armRx: 14,
-    abs: true,
-    dumbbell: true,
-  },
+  { min: 0, id: 'newbie', armRx: 7, abs: false, dumbbell: false },
+  { min: 3, id: 'gettingThere', armRx: 9, abs: false, dumbbell: false },
+  { min: 8, id: 'consistent', armRx: 11.5, abs: true, dumbbell: false },
+  { min: 16, id: 'absoluteUnit', armRx: 14, abs: true, dumbbell: true },
 ] as const;
 
 function levelFor(sessionCount: number) {
@@ -41,11 +17,21 @@ function levelFor(sessionCount: number) {
   return current;
 }
 
-export function Mascot({ sessionCount }: { sessionCount: number }) {
+export function Mascot({
+  sessionCount,
+  className = '',
+}: {
+  sessionCount: number;
+  className?: string;
+}) {
+  const { dict } = useLocale();
   const level = levelFor(sessionCount);
+  const copy = dict.mascot[level.id];
 
   return (
-    <div className="border-border bg-card flex items-center gap-4 rounded-lg border p-4">
+    <div
+      className={`border-border bg-card flex items-center gap-4 rounded-lg border p-4 ${className}`}
+    >
       <svg viewBox="0 0 100 100" className="text-primary h-16 w-16 shrink-0" aria-hidden="true">
         <ellipse cx="50" cy="60" rx="22" ry="26" fill="currentColor" />
         <circle cx="50" cy="28" r="16" fill="currentColor" />
@@ -109,9 +95,9 @@ export function Mascot({ sessionCount }: { sessionCount: number }) {
         />
       </svg>
       <div>
-        <p className="text-sm font-medium">{level.name}</p>
-        <p className="text-muted-foreground text-sm">{level.tip}</p>
-        <p className="text-muted-foreground text-xs">{sessionCount} trainings logged</p>
+        <p className="text-sm font-medium">{copy.name}</p>
+        <p className="text-muted-foreground text-sm">{copy.tip}</p>
+        <p className="text-muted-foreground text-xs">{dict.mascot.trainingsLogged(sessionCount)}</p>
       </div>
     </div>
   );

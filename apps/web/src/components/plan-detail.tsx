@@ -17,6 +17,7 @@ import type { z } from 'zod';
 import { ConfirmButton } from '@/components/confirm-button';
 import { apiClient } from '@/lib/api-client';
 import { exerciseLibrary } from '@/lib/exercise-library';
+import { useLocale } from '@/lib/i18n/context';
 
 const exerciseNameSuggestions = Object.values(exerciseLibrary).flatMap((exercises) =>
   exercises.map((exercise) => exercise.name),
@@ -27,6 +28,7 @@ type ExerciseFormValues = z.infer<typeof createWorkoutExerciseInputSchema>;
 
 export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
   const router = useRouter();
+  const { dict } = useLocale();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const planForm = useForm<PlanFormValues>({
@@ -77,12 +79,12 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
         <ConfirmButton
           variant="ghost"
           size="sm"
-          title="Delete this plan?"
-          description={`"${plan.name}" and all of its exercises will be permanently deleted.`}
+          title={dict.planDetail.deletePlanTitle}
+          description={dict.planDetail.deletePlanDescription(plan.name)}
           pending={removePlan.isPending}
           onConfirm={() => removePlan.mutate()}
         >
-          Delete plan
+          {dict.planDetail.deletePlan}
         </ConfirmButton>
       </Stack>
 
@@ -90,7 +92,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
         <form onSubmit={planForm.handleSubmit((values) => updatePlan.mutate(values))}>
           <Stack gap="sm">
             <Stack gap="xs">
-              <Text variant="caption">Name</Text>
+              <Text variant="caption">{dict.common.name}</Text>
               <Input {...planForm.register('name')} />
               {planForm.formState.errors.name && (
                 <Text variant="caption" tone="destructive">
@@ -99,7 +101,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
               )}
             </Stack>
             <Stack gap="xs">
-              <Text variant="caption">Notes</Text>
+              <Text variant="caption">{dict.planDetail.notes}</Text>
               <textarea
                 className="border-border bg-background text-foreground focus-visible:ring-ring rounded-md border px-3 py-2 text-base focus-visible:ring-2 focus-visible:outline-none"
                 rows={2}
@@ -108,7 +110,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
             </Stack>
             <Stack direction="row" gap="sm" align="center">
               <Button type="submit" size="sm" disabled={updatePlan.isPending}>
-                {updatePlan.isPending ? 'Saving…' : 'Save'}
+                {updatePlan.isPending ? dict.common.saving : dict.common.save}
               </Button>
               {updatePlan.isError && (
                 <Text variant="caption" tone="destructive">
@@ -122,18 +124,18 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
 
       <Card>
         <Text variant="subheading" className="mb-3 block">
-          Exercises
+          {dict.planDetail.exercisesHeading}
         </Text>
         {plan.exercises.length === 0 ? (
-          <Text tone="muted">No exercises yet — add one below.</Text>
+          <Text tone="muted">{dict.planDetail.noExercises}</Text>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Exercise</TableHead>
-                <TableHead>Sets</TableHead>
-                <TableHead>Reps</TableHead>
-                <TableHead>Weight (kg)</TableHead>
+                <TableHead>{dict.common.name}</TableHead>
+                <TableHead>{dict.common.sets}</TableHead>
+                <TableHead>{dict.common.reps}</TableHead>
+                <TableHead>{dict.common.weightKg}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -167,28 +169,28 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
 
       <Card>
         <Text variant="subheading" className="mb-3 block">
-          Add exercise
+          {dict.planDetail.addExercise}
         </Text>
         <form onSubmit={addExerciseForm.handleSubmit((values) => addExercise.mutate(values))}>
           <Stack direction="row" gap="sm" align="end" className="flex-wrap">
             <Stack gap="xs">
-              <Text variant="caption">Name</Text>
+              <Text variant="caption">{dict.common.name}</Text>
               <Input
-                placeholder="Bench Press"
+                placeholder={dict.planDetail.exerciseNamePlaceholder}
                 list="exercise-name-suggestions"
                 {...addExerciseForm.register('name')}
               />
             </Stack>
             <Stack gap="xs" className="w-20">
-              <Text variant="caption">Sets</Text>
+              <Text variant="caption">{dict.common.sets}</Text>
               <Input type="number" {...addExerciseForm.register('sets', { valueAsNumber: true })} />
             </Stack>
             <Stack gap="xs" className="w-20">
-              <Text variant="caption">Reps</Text>
+              <Text variant="caption">{dict.common.reps}</Text>
               <Input type="number" {...addExerciseForm.register('reps', { valueAsNumber: true })} />
             </Stack>
             <Stack gap="xs" className="w-24">
-              <Text variant="caption">Weight (kg)</Text>
+              <Text variant="caption">{dict.common.weightKg}</Text>
               <Input
                 type="number"
                 step="0.5"
@@ -198,7 +200,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
               />
             </Stack>
             <Button type="submit" disabled={addExercise.isPending}>
-              {addExercise.isPending ? 'Adding…' : 'Add'}
+              {addExercise.isPending ? dict.common.adding : dict.common.add}
             </Button>
           </Stack>
           {addExercise.isError && (
@@ -228,6 +230,7 @@ function ExerciseRow({
   onEdit: () => void;
   onRemoved: () => void;
 }) {
+  const { dict } = useLocale();
   const removeExercise = useMutation({
     mutationFn: async () => {
       const result = await apiClient.workouts.removeExercise({
@@ -247,17 +250,17 @@ function ExerciseRow({
       <TableCell>
         <Stack direction="row" gap="xs">
           <Button variant="ghost" size="sm" onClick={onEdit}>
-            Edit
+            {dict.common.edit}
           </Button>
           <ConfirmButton
             variant="ghost"
             size="sm"
-            title="Remove this exercise?"
-            description={`"${exercise.name}" will be removed from this plan.`}
+            title={dict.planDetail.removeExerciseTitle}
+            description={dict.planDetail.removeExerciseDescription(exercise.name)}
             pending={removeExercise.isPending}
             onConfirm={() => removeExercise.mutate()}
           >
-            Remove
+            {dict.common.remove}
           </ConfirmButton>
         </Stack>
       </TableCell>
@@ -276,6 +279,7 @@ function ExerciseEditRow({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const { dict } = useLocale();
   const { register, handleSubmit } = useForm<UpdateWorkoutExerciseInput>({
     defaultValues: {
       name: exercise.name,
@@ -314,10 +318,10 @@ function ExerciseEditRow({
             {...register('weightKg', { setValueAs: (v) => (v === '' ? undefined : Number(v)) })}
           />
           <Button type="submit" size="sm" disabled={updateExercise.isPending}>
-            Save
+            {dict.common.save}
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {dict.common.cancel}
           </Button>
         </form>
         {updateExercise.isError && (

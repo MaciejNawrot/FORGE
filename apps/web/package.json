@@ -21,6 +21,7 @@
     "@hookform/resolvers": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
+    "lucide-react": "^0.545.0",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

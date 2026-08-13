@@ -1,0 +1,1 @@
+ALTER TABLE "workout_plans" ADD COLUMN "category" text;

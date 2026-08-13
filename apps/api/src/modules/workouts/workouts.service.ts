@@ -41,6 +41,7 @@ export class WorkoutsService {
       userId,
       name: input.name,
       notes: input.notes ?? null,
+      category: input.category ?? null,
     });
   }
 

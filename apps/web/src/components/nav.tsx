@@ -1,65 +1,120 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { ClipboardList, LogOut, Settings, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/context';
+import { isNavLinkActive, primaryNavLinks } from '@/lib/nav-links';
 import { sessionQueryKey, useSession } from '@/lib/use-session';
 
-const navLinks = [
-  { href: '/tracker', label: 'Tracker' },
-  { href: '/plans', label: 'Plans' },
-  { href: '/exercises', label: 'Exercises' },
-  { href: '/users', label: 'Users' },
+const secondaryNavLinks = [
+  { href: '/exercises', labelKey: 'exercises', icon: ClipboardList },
+  { href: '/users', labelKey: 'users', icon: Users },
+  { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
+
+function closeMenu(event: { currentTarget: HTMLElement }) {
+  event.currentTarget.closest('details')?.removeAttribute('open');
+}
 
 export function Nav() {
   const { data: session, isPending } = useSession();
   const queryClient = useQueryClient();
   const pathname = usePathname();
+  const { dict } = useLocale();
 
-  async function handleLogout() {
+  async function handleLogout(event: { currentTarget: HTMLElement }) {
+    closeMenu(event);
     await apiClient.auth.logout();
     await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
   }
 
   return (
-    <nav className="border-border flex items-center justify-between border-b p-4">
-      <div className="flex gap-4">
-        <Link href="/" className="font-medium">
-          GYM0
-        </Link>
-        {navLinks.map((link) => {
-          const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
+    <nav className="border-border bg-background flex items-center justify-between gap-4 border-b p-4">
+      <Link href="/" className="shrink-0 text-lg font-bold tracking-tight uppercase">
+        Forge
+      </Link>
+
+      <div className="hidden items-center gap-1 md:flex">
+        {primaryNavLinks.map(({ href, labelKey, icon: Icon }) => {
+          const active = isNavLinkActive(pathname, href);
           return (
             <Link
-              key={link.href}
-              href={link.href}
-              className={
+              key={href}
+              href={href}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors ${
                 active
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              }
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-primary'
+              }`}
             >
-              {link.label}
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {dict.nav[labelKey]}
             </Link>
           );
         })}
       </div>
-      <div className="text-sm">
-        {isPending ? null : session ? (
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">{session.user.email}</span>
-            <button type="button" onClick={handleLogout} className="underline">
-              Log out
-            </button>
+
+      {/* ponytail: native <details> has no outside-click close — add a click-away handler if that bugs users */}
+      <details className="relative shrink-0">
+        <summary className="border-border bg-muted text-foreground flex h-9 w-9 list-none items-center justify-center rounded-full border [&::-webkit-details-marker]:hidden">
+          {isPending ? null : session ? (
+            <span className="font-data text-sm uppercase">
+              {(session.user.name || session.user.email)[0]}
+            </span>
+          ) : (
+            <User className="h-4 w-4" aria-hidden="true" />
+          )}
+        </summary>
+        <div className="glass-panel border-border absolute top-full right-0 z-50 mt-2 w-56 rounded-lg border p-2">
+          <div className="flex flex-col gap-1">
+            {secondaryNavLinks.map(({ href, labelKey, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={closeMenu}
+                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                  isNavLinkActive(pathname, href)
+                    ? 'text-primary'
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {dict.nav[labelKey]}
+              </Link>
+            ))}
           </div>
-        ) : (
-          <Link href="/login" className="underline">
-            Log in
-          </Link>
-        )}
-      </div>
+          <div className="border-border my-2 border-t" />
+          {isPending ? null : session ? (
+            <div className="flex flex-col gap-1">
+              <span
+                className="text-muted-foreground truncate px-3 py-1 text-xs"
+                title={session.user.email}
+              >
+                {session.user.email}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-destructive hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                {dict.common.logOut}
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              onClick={closeMenu}
+              className="text-primary flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:underline"
+            >
+              {dict.common.logIn}
+            </Link>
+          )}
+        </div>
+      </details>
     </nav>
   );
 }

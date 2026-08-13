@@ -3,12 +3,13 @@
 import { Button, type ButtonProps } from '@acme/ui';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@acme/ui/web';
 import { useState } from 'react';
+import { useLocale } from '@/lib/i18n/context';
 
 export function ConfirmButton({
   onConfirm,
   title,
   description,
-  confirmLabel = 'Delete',
+  confirmLabel,
   pending,
   children,
   ...buttonProps
@@ -19,6 +20,7 @@ export function ConfirmButton({
   confirmLabel?: string;
   pending?: boolean;
 } & Omit<ButtonProps, 'onClick'>) {
+  const { dict } = useLocale();
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,7 +34,7 @@ export function ConfirmButton({
         <div className="mt-4 flex justify-end gap-2">
           <DialogClose asChild>
             <Button type="button" variant="outline" size="sm">
-              Cancel
+              {dict.common.cancel}
             </Button>
           </DialogClose>
           <Button
@@ -45,7 +47,7 @@ export function ConfirmButton({
               onConfirm();
             }}
           >
-            {pending ? 'Deleting…' : confirmLabel}
+            {pending ? dict.common.deleting : (confirmLabel ?? dict.common.delete)}
           </Button>
         </div>
       </DialogContent>

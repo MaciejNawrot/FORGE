@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { trainingTypeSchema } from './training.schema.js';
 
 export const workoutExerciseSchema = z.object({
   id: z.string().uuid(),
@@ -29,6 +30,7 @@ export const workoutPlanSchema = z.object({
   userId: z.string(),
   name: z.string().min(1).max(120),
   notes: z.string().max(2000).nullable(),
+  category: trainingTypeSchema.nullable(),
   isTemplate: z.boolean(),
   forkedFromId: z.string().uuid().nullable(),
   createdAt: z.coerce.date(),
@@ -49,6 +51,7 @@ export type WorkoutPlanListItem = z.infer<typeof workoutPlanListItemSchema>;
 export const createWorkoutPlanInputSchema = z.object({
   name: z.string().min(1).max(120),
   notes: z.string().max(2000).nullable().optional(),
+  category: trainingTypeSchema.nullable().optional(),
 });
 export type CreateWorkoutPlanInput = z.infer<typeof createWorkoutPlanInputSchema>;
 
