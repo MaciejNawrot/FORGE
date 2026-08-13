@@ -16,6 +16,7 @@ import { ExercisePicker } from '@/components/exercise-picker';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
 import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';
+import { unloggedPlanExercises } from '@/lib/plan-progress';
 import { trainingTypeStyles } from '@/lib/training-colors';
 
 const REST_SECONDS = 90;
@@ -64,6 +65,7 @@ function useCountdown(
 
 export function SessionDetail({
   session,
+  plan,
 }: {
   session: TrainingSessionWithExercises;
   plan?: WorkoutPlanWithExercises | null;
@@ -79,6 +81,19 @@ export function SessionDetail({
   const [sets, setSets] = useState(3);
   const [reps, setReps] = useState(10);
   const [weightKg, setWeightKg] = useState('');
+
+  const notYetLogged = plan ? unloggedPlanExercises(plan.exercises, session.exercises) : [];
+
+  const { data: suggestedLastPerformance } = useQuery({
+    queryKey: ['last-performance', 'suggested', notYetLogged.map((e) => e.exercise.id).join(',')],
+    queryFn: async () => {
+      const result = await apiClient.training.lastPerformance({
+        query: { exerciseIds: notYetLogged.map((e) => e.exercise.id).join(',') },
+      });
+      return result.status === 200 ? result.body : [];
+    },
+    enabled: notYetLogged.length > 0,
+  });
 
   const removeSession = useMutation({
     mutationFn: async () => {
@@ -119,6 +134,57 @@ export function SessionDetail({
       {session.notes && (
         <Card className="glass-panel">
           <Text tone="muted">{session.notes}</Text>
+        </Card>
+      )}
+
+      {notYetLogged.length > 0 && (
+        <Card className="glass-panel">
+          <Text
+            tone="muted"
+            variant="caption"
+            className="font-data mb-3 block tracking-widest uppercase"
+          >
+            {dict.activeTracking.suggestedNext}
+          </Text>
+          <Stack gap="sm">
+            {notYetLogged.map((planExercise) => {
+              const last = suggestedLastPerformance?.find(
+                (entry) => entry.exerciseId === planExercise.exercise.id,
+              );
+              return (
+                <button
+                  key={planExercise.id}
+                  type="button"
+                  onClick={() => {
+                    setSelected(planExercise.exercise);
+                    setSets(last?.sets ?? planExercise.sets);
+                    setReps(last?.reps ?? planExercise.reps);
+                    const weight = last ? (last.weightKg ?? null) : (planExercise.weightKg ?? null);
+                    setWeightKg(weight == null ? '' : String(weight));
+                  }}
+                  className="bg-muted hover:bg-accent flex w-full items-center justify-between gap-3 rounded-lg p-3 text-left transition-colors"
+                >
+                  <div className="flex flex-col">
+                    <Text className="font-medium">{planExercise.exercise.name}</Text>
+                    <Text tone="muted" variant="caption" className="font-data">
+                      {last
+                        ? dict.activeTracking.lastTime(
+                            last.weightKg,
+                            last.reps,
+                            last.sets,
+                            last.date,
+                          )
+                        : dict.sessionDetail.exerciseLine(
+                            planExercise.weightKg,
+                            planExercise.reps,
+                            planExercise.sets,
+                          )}
+                    </Text>
+                  </div>
+                </button>
+              );
+            })}
+          </Stack>
         </Card>
       )}
 
