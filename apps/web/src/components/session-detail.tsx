@@ -2,10 +2,11 @@
 
 import type {
   AddTrainingSessionExerciseInput,
+  Exercise,
   TrainingSessionWithExercises,
 } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Flag, Timer, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -13,6 +14,7 @@ import { ConfirmButton } from '@/components/confirm-button';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
+import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';
 import { trainingTypeStyles } from '@/lib/training-colors';
 
 const REST_SECONDS = 90;
@@ -112,6 +114,7 @@ export function SessionDetail({ session }: { session: TrainingSessionWithExercis
 
       <AddSessionExerciseCard
         sessionId={session.id}
+        loggedExercises={session.exercises}
         onAdded={() => {
           setResting(true);
           router.refresh();
@@ -289,16 +292,34 @@ function BigNumberInput({
 
 function AddSessionExerciseCard({
   sessionId,
+  loggedExercises,
   onAdded,
 }: {
   sessionId: string;
+  loggedExercises: TrainingSessionWithExercises['exercises'];
   onAdded: () => void;
 }) {
   const { dict } = useLocale();
-  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
+  const [selected, setSelected] = useState<Exercise | null>(null);
   const [sets, setSets] = useState(3);
   const [reps, setReps] = useState(10);
   const [weightKg, setWeightKg] = useState('');
+
+  const { data: lastPerformance } = useQuery({
+    queryKey: ['last-performance', selected?.id],
+    queryFn: async () => {
+      if (!selected) return undefined;
+      const result = await apiClient.training.lastPerformance({
+        query: { exerciseIds: selected.id },
+      });
+      return result.status === 200 ? result.body[0] : undefined;
+    },
+    enabled: selected !== null,
+  });
+
+  const alreadyTrained = selected
+    ? alreadyTrainedGroups(selected.muscleGroups, loggedExercises)
+    : [];
 
   const addExercise = useMutation({
     mutationFn: async () => {
@@ -336,6 +357,21 @@ function AddSessionExerciseCard({
             >
               {selected.name}
             </Text>
+            {lastPerformance && (
+              <Text tone="muted" variant="caption" className="font-data block">
+                {dict.activeTracking.lastTime(
+                  lastPerformance.weightKg,
+                  lastPerformance.reps,
+                  lastPerformance.sets,
+                  lastPerformance.date,
+                )}
+              </Text>
+            )}
+            {alreadyTrained.length > 0 && (
+              <Text tone="muted" variant="caption" className="font-data mt-1 block uppercase">
+                {dict.activeTracking.alreadyTrained(alreadyTrained.join(', '))}
+              </Text>
+            )}
           </div>
           <button
             type="button"
@@ -347,9 +383,7 @@ function AddSessionExerciseCard({
         </div>
       )}
       {!selected ? (
-        <ExercisePicker
-          onSelect={(exercise) => setSelected({ id: exercise.id, name: exercise.name })}
-        />
+        <ExercisePicker onSelect={setSelected} />
       ) : (
         <Stack gap="sm">
           <div className="grid grid-cols-3 gap-3">

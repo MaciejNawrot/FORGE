@@ -155,6 +155,9 @@ export const en = {
     logSet: 'Log Set',
     previousSets: 'Previous Sets',
     resting: 'Resting…',
+    lastTime: (weightKg: number | null, reps: number, sets: number, date: string) =>
+      `Last time: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} reps × ${sets} sets (${date})`,
+    alreadyTrained: (muscleGroups: string) => `Already trained today: ${muscleGroups}`,
   },
 
   sessionDetail: {

@@ -165,6 +165,9 @@ export const pl: Dictionary = {
     logSet: 'Zapisz serię',
     previousSets: 'Poprzednie serie',
     resting: 'Odpoczynek…',
+    lastTime: (weightKg: number | null, reps: number, sets: number, date: string) =>
+      `Poprzednio: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} powt. × ${sets} serie (${date})`,
+    alreadyTrained: (muscleGroups: string) => `Już trenowane dziś: ${muscleGroups}`,
   },
 
   sessionDetail: {
