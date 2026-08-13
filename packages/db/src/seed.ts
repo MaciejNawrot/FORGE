@@ -311,6 +311,24 @@ const exerciseCatalog = [
     equipment: 'bodyweight',
     description: 'Squat, kick back to plank, push up, jump.',
   },
+  {
+    name: 'Interval Sprints',
+    muscleGroups: ['full body'],
+    equipment: 'bodyweight',
+    description: 'Short all-out sprint efforts with equal rest between reps.',
+  },
+  {
+    name: 'Rowing Intervals',
+    muscleGroups: ['full body'],
+    equipment: 'machine',
+    description: 'Alternate hard rowing pace with easy recovery strokes.',
+  },
+  {
+    name: 'Bike Sprints',
+    muscleGroups: ['full body'],
+    equipment: 'machine',
+    description: 'Alternate max-effort and easy-pace cycling intervals.',
+  },
 ] as const;
 
 const planTemplates = [
@@ -410,6 +428,29 @@ async function main() {
     )
     .onConflictDoNothing();
 
+  const catalogRows = await db.select({ id: exercises.id, name: exercises.name }).from(exercises);
+  const exerciseIdByName = new Map(catalogRows.map((row) => [row.name.toLowerCase(), row.id]));
+
+  function buildExerciseRows(planId: string, template: (typeof planTemplates)[number]) {
+    return template.exercises.map((exercise, index) => {
+      const exerciseId = exerciseIdByName.get(exercise.name.toLowerCase());
+      if (!exerciseId) {
+        throw new Error(
+          `Seed template "${template.name}" references unknown exercise "${exercise.name}"`,
+        );
+      }
+      return {
+        planId,
+        exerciseId,
+        name: exercise.name,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        weightKg: exercise.weightKg,
+        position: index,
+      };
+    });
+  }
+
   for (const template of planTemplates) {
     const [existing] = await db
       .select({ id: workoutPlans.id })
@@ -421,6 +462,8 @@ async function main() {
         .update(workoutPlans)
         .set({ category: template.category })
         .where(eq(workoutPlans.id, existing.id));
+      await db.delete(workoutExercises).where(eq(workoutExercises.planId, existing.id));
+      await db.insert(workoutExercises).values(buildExerciseRows(existing.id, template));
       continue;
     }
 
@@ -436,16 +479,7 @@ async function main() {
       .returning();
     if (!plan) throw new Error(`Failed to seed template "${template.name}"`);
 
-    await db.insert(workoutExercises).values(
-      template.exercises.map((exercise, index) => ({
-        planId: plan.id,
-        name: exercise.name,
-        sets: exercise.sets,
-        reps: exercise.reps,
-        weightKg: exercise.weightKg,
-        position: index,
-      })),
-    );
+    await db.insert(workoutExercises).values(buildExerciseRows(plan.id, template));
   }
 
   console.log('Seed complete.');
