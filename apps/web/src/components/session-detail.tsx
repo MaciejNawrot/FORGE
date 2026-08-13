@@ -4,12 +4,13 @@ import type {
   AddTrainingSessionExerciseInput,
   TrainingSessionWithExercises,
 } from '@acme/contracts';
-import { Card, Input, Stack, Text } from '@acme/ui';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { Card, Stack, Text } from '@acme/ui';
+import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2, Flag, Timer, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ConfirmButton } from '@/components/confirm-button';
+import { ExercisePicker } from '@/components/exercise-picker';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
 import { trainingTypeStyles } from '@/lib/training-colors';
@@ -294,20 +295,10 @@ function AddSessionExerciseCard({
   onAdded: () => void;
 }) {
   const { dict } = useLocale();
-  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [sets, setSets] = useState(3);
   const [reps, setReps] = useState(10);
   const [weightKg, setWeightKg] = useState('');
-
-  const { data: results } = useQuery({
-    queryKey: ['exercises', search],
-    queryFn: async () => {
-      const result = await apiClient.exercises.listExercises({ query: { search } });
-      return result.status === 200 ? result.body : [];
-    },
-    enabled: search.trim().length > 0 && !selected,
-  });
 
   const addExercise = useMutation({
     mutationFn: async () => {
@@ -327,7 +318,6 @@ function AddSessionExerciseCard({
     },
     onSuccess: () => {
       setSelected(null);
-      setSearch('');
       setSets(3);
       setReps(10);
       setWeightKg('');
@@ -357,38 +347,9 @@ function AddSessionExerciseCard({
         </div>
       )}
       {!selected ? (
-        <Stack gap="sm">
-          <Input
-            placeholder={dict.common.searchExercises}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          {results && results.length > 0 && (
-            <div className="border-border max-h-48 overflow-y-auto rounded-md border">
-              {results.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  type="button"
-                  onClick={() => {
-                    setSelected({ id: exercise.id, name: exercise.name });
-                    setSearch('');
-                  }}
-                  className="hover:bg-accent flex w-full flex-col items-start px-3 py-2 text-left"
-                >
-                  <span className="text-sm font-medium">{exercise.name}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {exercise.muscleGroups.join(', ')}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-          {search.trim().length > 0 && results && results.length === 0 && (
-            <Text tone="muted" variant="caption">
-              {dict.common.noExercisesMatch(search)}
-            </Text>
-          )}
-        </Stack>
+        <ExercisePicker
+          onSelect={(exercise) => setSelected({ id: exercise.id, name: exercise.name })}
+        />
       ) : (
         <Stack gap="sm">
           <div className="grid grid-cols-3 gap-3">
