@@ -1,11 +1,12 @@
 'use client';
 
 import type {
+  Exercise,
   UpdateWorkoutExerciseInput,
   WorkoutExercise,
   WorkoutPlanWithExercises,
 } from '@acme/contracts';
-import { createWorkoutExerciseInputSchema, updateWorkoutPlanInputSchema } from '@acme/contracts';
+import { updateWorkoutPlanInputSchema } from '@acme/contracts';
 import { Button, Card, Input, Stack, Text } from '@acme/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@acme/ui/web';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,16 +16,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { ConfirmButton } from '@/components/confirm-button';
+import { ExercisePicker } from '@/components/exercise-picker';
 import { apiClient } from '@/lib/api-client';
-import { exerciseLibrary } from '@/lib/exercise-library';
 import { useLocale } from '@/lib/i18n/context';
 
-const exerciseNameSuggestions = Object.values(exerciseLibrary).flatMap((exercises) =>
-  exercises.map((exercise) => exercise.name),
-);
-
 type PlanFormValues = z.infer<typeof updateWorkoutPlanInputSchema>;
-type ExerciseFormValues = z.infer<typeof createWorkoutExerciseInputSchema>;
 
 export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
   const router = useRouter();
@@ -51,25 +47,6 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
       if (result.status !== 204) throw new Error(result.body.message);
     },
     onSuccess: () => router.push('/plans'),
-  });
-
-  const addExerciseForm = useForm<ExerciseFormValues>({
-    resolver: zodResolver(createWorkoutExerciseInputSchema),
-  });
-
-  const addExercise = useMutation({
-    mutationFn: async (values: ExerciseFormValues) => {
-      const result = await apiClient.workouts.addExercise({
-        params: { planId: plan.id },
-        body: values,
-      });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
-    },
-    onSuccess: () => {
-      addExerciseForm.reset();
-      router.refresh();
-    },
   });
 
   return (
@@ -167,55 +144,103 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
         )}
       </Card>
 
-      <Card>
-        <Text variant="subheading" className="mb-3 block">
-          {dict.planDetail.addExercise}
-        </Text>
-        <form onSubmit={addExerciseForm.handleSubmit((values) => addExercise.mutate(values))}>
+      <AddPlanExerciseCard planId={plan.id} onAdded={() => router.refresh()} />
+    </Stack>
+  );
+}
+
+function AddPlanExerciseCard({ planId, onAdded }: { planId: string; onAdded: () => void }) {
+  const { dict } = useLocale();
+  const [selected, setSelected] = useState<Exercise | null>(null);
+  const [sets, setSets] = useState(3);
+  const [reps, setReps] = useState(10);
+  const [weightKg, setWeightKg] = useState('');
+
+  const addExercise = useMutation({
+    mutationFn: async () => {
+      if (!selected) throw new Error('Pick an exercise first');
+      const result = await apiClient.workouts.addExercise({
+        params: { planId },
+        body: {
+          exerciseId: selected.id,
+          sets,
+          reps,
+          weightKg: weightKg === '' ? undefined : Number(weightKg),
+        },
+      });
+      if (result.status !== 201) throw new Error(result.body.message);
+      return result.body;
+    },
+    onSuccess: () => {
+      setSelected(null);
+      setSets(3);
+      setReps(10);
+      setWeightKg('');
+      onAdded();
+    },
+  });
+
+  return (
+    <Card>
+      <Text variant="subheading" className="mb-3 block">
+        {dict.planDetail.addExercise}
+      </Text>
+      {selected ? (
+        <Stack gap="sm">
+          <div className="flex items-center justify-between gap-2">
+            <Text className="font-medium">{selected.name}</Text>
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="font-data text-muted-foreground hover:text-primary text-xs uppercase"
+            >
+              {dict.common.change}
+            </button>
+          </div>
           <Stack direction="row" gap="sm" align="end" className="flex-wrap">
-            <Stack gap="xs">
-              <Text variant="caption">{dict.common.name}</Text>
+            <Stack gap="xs" className="w-20">
+              <Text variant="caption">{dict.common.sets}</Text>
               <Input
-                placeholder={dict.planDetail.exerciseNamePlaceholder}
-                list="exercise-name-suggestions"
-                {...addExerciseForm.register('name')}
+                type="number"
+                value={sets}
+                onChange={(event) => setSets(Number(event.target.value))}
               />
             </Stack>
             <Stack gap="xs" className="w-20">
-              <Text variant="caption">{dict.common.sets}</Text>
-              <Input type="number" {...addExerciseForm.register('sets', { valueAsNumber: true })} />
-            </Stack>
-            <Stack gap="xs" className="w-20">
               <Text variant="caption">{dict.common.reps}</Text>
-              <Input type="number" {...addExerciseForm.register('reps', { valueAsNumber: true })} />
+              <Input
+                type="number"
+                value={reps}
+                onChange={(event) => setReps(Number(event.target.value))}
+              />
             </Stack>
             <Stack gap="xs" className="w-24">
               <Text variant="caption">{dict.common.weightKg}</Text>
               <Input
                 type="number"
                 step="0.5"
-                {...addExerciseForm.register('weightKg', {
-                  setValueAs: (v) => (v === '' ? undefined : Number(v)),
-                })}
+                value={weightKg}
+                onChange={(event) => setWeightKg(event.target.value)}
               />
             </Stack>
-            <Button type="submit" disabled={addExercise.isPending}>
+            <Button
+              type="button"
+              disabled={addExercise.isPending}
+              onClick={() => addExercise.mutate()}
+            >
               {addExercise.isPending ? dict.common.adding : dict.common.add}
             </Button>
           </Stack>
-          {addExercise.isError && (
-            <Text variant="caption" tone="destructive" className="mt-2 block">
-              {addExercise.error.message}
-            </Text>
-          )}
-        </form>
-        <datalist id="exercise-name-suggestions">
-          {exerciseNameSuggestions.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
-      </Card>
-    </Stack>
+        </Stack>
+      ) : (
+        <ExercisePicker onSelect={setSelected} />
+      )}
+      {addExercise.isError && (
+        <Text variant="caption" tone="destructive" className="mt-2 block">
+          {addExercise.error.message}
+        </Text>
+      )}
+    </Card>
   );
 }
 
@@ -243,7 +268,7 @@ function ExerciseRow({
 
   return (
     <TableRow>
-      <TableCell>{exercise.name}</TableCell>
+      <TableCell>{exercise.exercise.name}</TableCell>
       <TableCell>{exercise.sets}</TableCell>
       <TableCell>{exercise.reps}</TableCell>
       <TableCell>{exercise.weightKg ?? '—'}</TableCell>
@@ -256,7 +281,7 @@ function ExerciseRow({
             variant="ghost"
             size="sm"
             title={dict.planDetail.removeExerciseTitle}
-            description={dict.planDetail.removeExerciseDescription(exercise.name)}
+            description={dict.planDetail.removeExerciseDescription(exercise.exercise.name)}
             pending={removeExercise.isPending}
             onConfirm={() => removeExercise.mutate()}
           >
@@ -282,7 +307,6 @@ function ExerciseEditRow({
   const { dict } = useLocale();
   const { register, handleSubmit } = useForm<UpdateWorkoutExerciseInput>({
     defaultValues: {
-      name: exercise.name,
       sets: exercise.sets,
       reps: exercise.reps,
       weightKg: exercise.weightKg,
@@ -306,9 +330,9 @@ function ExerciseEditRow({
       <TableCell colSpan={5}>
         <form
           onSubmit={handleSubmit((values) => updateExercise.mutate(values))}
-          className="flex flex-wrap items-end gap-2"
+          className="flex flex-wrap items-center gap-2"
         >
-          <Input className="w-32" required {...register('name')} />
+          <Text className="font-medium">{exercise.exercise.name}</Text>
           <Input className="w-16" type="number" {...register('sets', { valueAsNumber: true })} />
           <Input className="w-16" type="number" {...register('reps', { valueAsNumber: true })} />
           <Input

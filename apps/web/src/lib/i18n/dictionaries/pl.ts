@@ -97,7 +97,6 @@ export const pl: Dictionary = {
     exercisesHeading: 'Ćwiczenia',
     noExercises: 'Brak ćwiczeń — dodaj jedno poniżej.',
     addExercise: 'Dodaj ćwiczenie',
-    exerciseNamePlaceholder: 'Wyciskanie sztangi',
     removeExerciseTitle: 'Usunąć to ćwiczenie?',
     removeExerciseDescription: (name: string) => `„${name}” zostanie usunięte z tego planu.`,
   },

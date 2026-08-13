@@ -88,7 +88,6 @@ export const en = {
     exercisesHeading: 'Exercises',
     noExercises: 'No exercises yet — add one below.',
     addExercise: 'Add exercise',
-    exerciseNamePlaceholder: 'Bench Press',
     removeExerciseTitle: 'Remove this exercise?',
     removeExerciseDescription: (name: string) => `"${name}" will be removed from this plan.`,
   },
