@@ -69,6 +69,10 @@ export function SessionDetail({ session }: { session: TrainingSessionWithExercis
   const [resting, setResting] = useState(false);
   const [editingRest, setEditingRest] = useState(false);
   const rest = useCountdown(resting, REST_SECONDS);
+  const [selected, setSelected] = useState<Exercise | null>(null);
+  const [sets, setSets] = useState(3);
+  const [reps, setReps] = useState(10);
+  const [weightKg, setWeightKg] = useState('');
 
   const removeSession = useMutation({
     mutationFn: async () => {
@@ -115,6 +119,14 @@ export function SessionDetail({ session }: { session: TrainingSessionWithExercis
       <AddSessionExerciseCard
         sessionId={session.id}
         loggedExercises={session.exercises}
+        selected={selected}
+        onSelect={setSelected}
+        sets={sets}
+        onSetsChange={setSets}
+        reps={reps}
+        onRepsChange={setReps}
+        weightKg={weightKg}
+        onWeightKgChange={setWeightKg}
         onAdded={() => {
           setResting(true);
           router.refresh();
@@ -293,17 +305,29 @@ function BigNumberInput({
 function AddSessionExerciseCard({
   sessionId,
   loggedExercises,
+  selected,
+  onSelect,
+  sets,
+  onSetsChange,
+  reps,
+  onRepsChange,
+  weightKg,
+  onWeightKgChange,
   onAdded,
 }: {
   sessionId: string;
   loggedExercises: TrainingSessionWithExercises['exercises'];
+  selected: Exercise | null;
+  onSelect: (exercise: Exercise | null) => void;
+  sets: number;
+  onSetsChange: (value: number) => void;
+  reps: number;
+  onRepsChange: (value: number) => void;
+  weightKg: string;
+  onWeightKgChange: (value: string) => void;
   onAdded: () => void;
 }) {
   const { dict } = useLocale();
-  const [selected, setSelected] = useState<Exercise | null>(null);
-  const [sets, setSets] = useState(3);
-  const [reps, setReps] = useState(10);
-  const [weightKg, setWeightKg] = useState('');
 
   const { data: lastPerformance } = useQuery({
     queryKey: ['last-performance', selected?.id],
@@ -338,10 +362,10 @@ function AddSessionExerciseCard({
       return result.body;
     },
     onSuccess: () => {
-      setSelected(null);
-      setSets(3);
-      setReps(10);
-      setWeightKg('');
+      onSelect(null);
+      onSetsChange(3);
+      onRepsChange(10);
+      onWeightKgChange('');
       onAdded();
     },
   });
@@ -375,7 +399,7 @@ function AddSessionExerciseCard({
           </div>
           <button
             type="button"
-            onClick={() => setSelected(null)}
+            onClick={() => onSelect(null)}
             className="font-data text-muted-foreground hover:text-primary text-xs uppercase"
           >
             {dict.common.change}
@@ -383,25 +407,25 @@ function AddSessionExerciseCard({
         </div>
       )}
       {!selected ? (
-        <ExercisePicker onSelect={setSelected} />
+        <ExercisePicker onSelect={onSelect} />
       ) : (
         <Stack gap="sm">
           <div className="grid grid-cols-3 gap-3">
             <BigNumberInput
               label={dict.common.sets}
               value={sets}
-              onChange={(v) => setSets(Number(v))}
+              onChange={(v) => onSetsChange(Number(v))}
             />
             <BigNumberInput
               label={dict.common.reps}
               value={reps}
-              onChange={(v) => setReps(Number(v))}
+              onChange={(v) => onRepsChange(Number(v))}
             />
             <BigNumberInput
               label={dict.common.weightKg}
               value={weightKg}
               step="0.5"
-              onChange={setWeightKg}
+              onChange={onWeightKgChange}
             />
           </div>
           <button
