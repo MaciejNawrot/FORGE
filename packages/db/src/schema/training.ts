@@ -2,10 +2,7 @@ import { relations } from 'drizzle-orm';
 import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { user } from './auth.js';
 import { exercises } from './exercises.js';
-
-/** Fixed, color-coded training types shown on the tracker heatmap. */
-export const trainingTypes = ['strength', 'cardio', 'mobility', 'rest'] as const;
-export type TrainingType = (typeof trainingTypes)[number];
+import { trainingTypes } from './training-types.js';
 
 export const trainingSessions = pgTable(
   'training_sessions',
