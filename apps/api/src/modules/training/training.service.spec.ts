@@ -7,6 +7,7 @@ function createRepositoryMock(overrides: Partial<TrainingRepository> = {}): Trai
     listSessions: vi.fn(),
     findSessionById: vi.fn(),
     createSession: vi.fn(),
+    finishSession: vi.fn(),
     removeSession: vi.fn(),
     listSessionExercises: vi.fn(),
     findSessionExerciseById: vi.fn(),
@@ -17,6 +18,19 @@ function createRepositoryMock(overrides: Partial<TrainingRepository> = {}): Trai
     ...overrides,
   } as unknown as TrainingRepository;
 }
+
+describe('TrainingService.finishSession', () => {
+  it('passes the elapsed duration through to the repository', async () => {
+    const repository = createRepositoryMock({
+      finishSession: vi.fn().mockResolvedValue({ id: 'session-1', durationSeconds: 120 }),
+    });
+    const service = new TrainingService(repository);
+
+    await service.finishSession('session-1', 'user-1', 120);
+
+    expect(repository.finishSession).toHaveBeenCalledWith('session-1', 'user-1', 120);
+  });
+});
 
 describe('TrainingService.getLastPerformance', () => {
   it('returns an entry only for exercise ids that have history', async () => {

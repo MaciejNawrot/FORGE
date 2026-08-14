@@ -4,6 +4,7 @@ import { errorResponseSchema } from '../schemas/error.schema.js';
 import {
   addTrainingSessionExerciseInputSchema,
   createTrainingSessionInputSchema,
+  finishTrainingSessionInputSchema,
   lastPerformanceEntrySchema,
   lastPerformanceQuerySchema,
   listTrainingSessionsQuerySchema,
@@ -57,6 +58,18 @@ export const trainingContract = c.router({
     body: c.noBody(),
     responses: { 204: c.noBody(), 401: errorResponseSchema, 404: errorResponseSchema },
     summary: 'Delete a training session',
+  },
+  finishSession: {
+    method: 'PATCH',
+    path: '/training-sessions/:id/finish',
+    pathParams: trainingSessionIdParamsSchema,
+    body: finishTrainingSessionInputSchema,
+    responses: {
+      200: trainingSessionSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Mark a training session finished and record how long it took',
   },
   addSessionExercise: {
     method: 'POST',

@@ -18,6 +18,9 @@ export const trainingSessions = pgTable(
     date: date('date', { mode: 'string' }).notNull(),
     type: text('type', { enum: trainingTypes }).notNull(),
     notes: text('notes'),
+    // Set once, when the session is finished. Null means the session was
+    // never timed (created directly, or timing was lost/not started).
+    durationSeconds: integer('duration_seconds'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

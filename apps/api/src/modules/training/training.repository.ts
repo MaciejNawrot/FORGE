@@ -48,6 +48,19 @@ export class TrainingRepository {
     return row;
   }
 
+  async finishSession(
+    id: string,
+    userId: string,
+    durationSeconds: number,
+  ): Promise<TrainingSessionRow | undefined> {
+    const [row] = await this.db
+      .update(trainingSessions)
+      .set({ durationSeconds, updatedAt: new Date() })
+      .where(and(eq(trainingSessions.id, id), eq(trainingSessions.userId, userId)))
+      .returning();
+    return row;
+  }
+
   async removeSession(id: string, userId: string): Promise<boolean> {
     const deleted = await this.db
       .delete(trainingSessions)

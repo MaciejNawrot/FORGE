@@ -50,6 +50,13 @@
       "when": 1786632346346,
       "tag": "0006_chilly_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786743869007,
+      "tag": "0007_glorious_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

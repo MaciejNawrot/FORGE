@@ -39,6 +39,16 @@ export class TrainingController {
         return { status: 201, body: session };
       },
 
+      finishSession: async ({ params, body }) => {
+        const session = await this.trainingService.finishSession(
+          params.id,
+          userId,
+          body.durationSeconds,
+        );
+        if (!session) return { status: 404, body: { message: 'Training session not found' } };
+        return { status: 200, body: session };
+      },
+
       removeSession: async ({ params }) => {
         const removed = await this.trainingService.removeSession(params.id, userId);
         if (!removed) return { status: 404, body: { message: 'Training session not found' } };

@@ -40,6 +40,12 @@ function useElapsedTime(since: number | null): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+function formatDuration(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
 function useCountdown(
   active: boolean,
   seconds: number,
@@ -77,6 +83,7 @@ export function SessionDetail({
   const style = trainingTypeStyles[session.type];
   const activeSession = useActiveSession();
   const isThisSessionActive = activeSession !== null && activeSession.sessionId === session.id;
+  const completedDuration = isThisSessionActive ? null : session.durationSeconds;
   const duration = useElapsedTime(
     activeSession && isThisSessionActive ? activeSession.startedAt : null,
   );
@@ -91,6 +98,27 @@ export function SessionDetail({
     }
     setBlocked(false);
     start(session.id);
+  };
+
+  const finishSession = useMutation({
+    mutationFn: async (durationSeconds: number) => {
+      const result = await apiClient.training.finishSession({
+        params: { id: session.id },
+        body: { durationSeconds },
+      });
+      if (result.status !== 200) throw new Error(result.body.message);
+      return result.body;
+    },
+    onSuccess: () => {
+      end();
+      router.push('/tracker');
+    },
+  });
+
+  const handleFinish = () => {
+    if (!activeSession) return;
+    const durationSeconds = Math.max(0, Math.floor((Date.now() - activeSession.startedAt) / 1000));
+    finishSession.mutate(durationSeconds);
   };
   const [resting, setResting] = useState(false);
   const [editingRest, setEditingRest] = useState(false);
@@ -142,6 +170,10 @@ export function SessionDetail({
         {isThisSessionActive ? (
           <span className="font-display text-glow-primary text-primary text-6xl tabular-nums">
             {duration}
+          </span>
+        ) : completedDuration != null ? (
+          <span className="font-display text-primary text-6xl tabular-nums">
+            {formatDuration(completedDuration)}
           </span>
         ) : (
           <button
@@ -278,70 +310,72 @@ export function SessionDetail({
         )}
       </Card>
 
-      <div className="glass-panel fixed inset-x-4 bottom-[76px] z-40 flex items-center justify-between gap-3 rounded-full p-2 md:right-6 md:bottom-24 md:left-auto md:w-auto">
-        {resting ? (
-          <div className="bg-muted flex items-center gap-3 rounded-full px-4 py-2">
-            <Timer className="text-muted-foreground h-4 w-4" aria-hidden="true" />
-            <Text tone="muted" variant="caption" className="font-data uppercase">
-              {dict.activeTracking.resting}
-            </Text>
-            {editingRest ? (
-              <input
-                type="number"
-                min={0}
-                // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
-                autoFocus
-                defaultValue={rest.remaining}
-                onFocus={(e) => e.currentTarget.select()}
-                onBlur={(e) => {
-                  const value = Number(e.target.value);
-                  rest.setRemaining(Number.isFinite(value) ? Math.max(0, value) : rest.remaining);
-                  setEditingRest(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-                className="font-display text-primary w-14 bg-transparent text-xl tabular-nums outline-none"
-              />
-            ) : (
+      {(resting || isThisSessionActive) && (
+        <div className="glass-panel fixed inset-x-4 bottom-[76px] z-40 flex items-center justify-between gap-3 rounded-full p-2 md:right-6 md:bottom-24 md:left-auto md:w-auto">
+          {resting ? (
+            <div className="bg-muted flex items-center gap-3 rounded-full px-4 py-2">
+              <Timer className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+              <Text tone="muted" variant="caption" className="font-data uppercase">
+                {dict.activeTracking.resting}
+              </Text>
+              {editingRest ? (
+                <input
+                  type="number"
+                  min={0}
+                  // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
+                  autoFocus
+                  defaultValue={rest.remaining}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onBlur={(e) => {
+                    const value = Number(e.target.value);
+                    rest.setRemaining(Number.isFinite(value) ? Math.max(0, value) : rest.remaining);
+                    setEditingRest(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                  className="font-display text-primary w-14 bg-transparent text-xl tabular-nums outline-none"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingRest(true)}
+                  className={`font-display text-xl tabular-nums ${rest.done ? 'text-destructive' : 'text-primary'}`}
+                >
+                  {rest.display}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setEditingRest(true)}
-                className={`font-display text-xl tabular-nums ${rest.done ? 'text-destructive' : 'text-primary'}`}
+                onClick={() => {
+                  setResting(false);
+                  setEditingRest(false);
+                }}
+                className="bg-accent hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+                aria-label="Skip rest"
               >
-                {rest.display}
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setResting(false);
-                setEditingRest(false);
-              }}
-              className="bg-accent hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-colors"
-              aria-label="Skip rest"
+            </div>
+          ) : (
+            <span />
+          )}
+          {isThisSessionActive && (
+            <ConfirmButton
+              variant="outline"
+              title={dict.sessionDetail.finishTitle}
+              description={dict.sessionDetail.finishDescription}
+              confirmLabel={dict.common.finish}
+              pending={finishSession.isPending}
+              onConfirm={handleFinish}
+              className="border-primary text-primary font-display shrink-0 gap-2 rounded-full uppercase"
             >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
-        ) : (
-          <span />
-        )}
-        <ConfirmButton
-          variant="outline"
-          title={dict.sessionDetail.finishTitle}
-          description={dict.sessionDetail.finishDescription}
-          confirmLabel={dict.common.finish}
-          onConfirm={() => {
-            if (isThisSessionActive) end();
-            router.push('/tracker');
-          }}
-          className="border-primary text-primary font-display shrink-0 gap-2 rounded-full uppercase"
-        >
-          <Flag className="h-4 w-4" fill="currentColor" aria-hidden="true" />
-          {dict.common.finish}
-        </ConfirmButton>
-      </div>
+              <Flag className="h-4 w-4" fill="currentColor" aria-hidden="true" />
+              {dict.common.finish}
+            </ConfirmButton>
+          )}
+        </div>
+      )}
     </Stack>
   );
 }

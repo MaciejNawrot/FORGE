@@ -34,6 +34,14 @@ export class TrainingService {
     });
   }
 
+  async finishSession(
+    id: string,
+    userId: string,
+    durationSeconds: number,
+  ): Promise<TrainingSession | undefined> {
+    return this.trainingRepository.finishSession(id, userId, durationSeconds);
+  }
+
   async removeSession(id: string, userId: string): Promise<boolean> {
     return this.trainingRepository.removeSession(id, userId);
   }

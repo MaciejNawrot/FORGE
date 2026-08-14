@@ -34,6 +34,7 @@ export const trainingSessionSchema = z.object({
   date: z.string(),
   type: trainingTypeSchema,
   notes: z.string().nullable(),
+  durationSeconds: z.number().int().min(0).nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -51,6 +52,11 @@ export const createTrainingSessionInputSchema = z.object({
   planId: z.string().uuid().nullable().optional(),
 });
 export type CreateTrainingSessionInput = z.infer<typeof createTrainingSessionInputSchema>;
+
+export const finishTrainingSessionInputSchema = z.object({
+  durationSeconds: z.number().int().min(0),
+});
+export type FinishTrainingSessionInput = z.infer<typeof finishTrainingSessionInputSchema>;
 
 export const listTrainingSessionsQuerySchema = z.object({
   from: z.string().regex(isoDatePattern).optional(),
