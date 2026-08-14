@@ -8,7 +8,7 @@ import type {
 } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, Flag, Timer, Trash2, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -127,7 +127,9 @@ export function SessionDetail({
   };
   const [resting, setResting] = useState(false);
   const [editingRest, setEditingRest] = useState(false);
-  const rest = useCountdown(resting, REST_SECONDS);
+  const [restSeconds, setRestSeconds] = useState(REST_SECONDS);
+  const [restExerciseLogId, setRestExerciseLogId] = useState<string | null>(null);
+  const rest = useCountdown(resting, restSeconds);
   const [selected, setSelected] = useState<Exercise | null>(null);
   const [sets, setSets] = useState(3);
   const [reps, setReps] = useState(10);
@@ -157,6 +159,36 @@ export function SessionDetail({
       router.push('/tracker');
     },
   });
+
+  const updateExerciseRest = useMutation({
+    mutationFn: async ({
+      exerciseLogId,
+      restSeconds: value,
+    }: {
+      exerciseLogId: string;
+      restSeconds: number;
+    }) => {
+      const result = await apiClient.training.updateSessionExerciseRest({
+        params: { sessionId: session.id, exerciseId: exerciseLogId },
+        body: { restSeconds: value },
+      });
+      if (result.status !== 200) throw new Error(result.body.message);
+      return result.body;
+    },
+  });
+
+  const handleAddRestTime = () => {
+    const next = restSeconds + 15;
+    setRestSeconds(next);
+    rest.setRemaining(rest.remaining + 15);
+    if (restExerciseLogId) {
+      updateExerciseRest.mutate({ exerciseLogId: restExerciseLogId, restSeconds: next });
+    }
+  };
+
+  const handleResetRest = () => {
+    rest.setRemaining(restSeconds);
+  };
 
   return (
     <Stack gap="lg" className="pb-24">
@@ -284,7 +316,9 @@ export function SessionDetail({
         onRepsChange={setReps}
         weightKg={weightKg}
         onWeightKgChange={setWeightKg}
-        onAdded={() => {
+        onAdded={(loggedExercise) => {
+          setRestExerciseLogId(loggedExercise.id);
+          setRestSeconds(loggedExercise.restSeconds ?? REST_SECONDS);
           setResting(true);
           router.refresh();
         }}
@@ -333,8 +367,16 @@ export function SessionDetail({
                   onFocus={(e) => e.currentTarget.select()}
                   onBlur={(e) => {
                     const value = Number(e.target.value);
-                    rest.setRemaining(Number.isFinite(value) ? Math.max(0, value) : rest.remaining);
+                    const next = Number.isFinite(value) ? Math.max(0, value) : rest.remaining;
+                    rest.setRemaining(next);
+                    setRestSeconds(next);
                     setEditingRest(false);
+                    if (restExerciseLogId) {
+                      updateExerciseRest.mutate({
+                        exerciseLogId: restExerciseLogId,
+                        restSeconds: next,
+                      });
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') e.currentTarget.blur();
@@ -350,6 +392,21 @@ export function SessionDetail({
                   {rest.display}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={handleAddRestTime}
+                className="bg-accent hover:text-primary font-data rounded-full px-2 py-1 text-xs uppercase transition-colors"
+              >
+                +15s
+              </button>
+              <button
+                type="button"
+                onClick={handleResetRest}
+                className="bg-accent hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+                aria-label="Reset rest timer"
+              >
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              </button>
               <button
                 type="button"
                 onClick={() => {
