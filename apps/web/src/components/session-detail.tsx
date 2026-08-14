@@ -8,7 +8,7 @@ import type {
 } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Flag, Timer, Trash2, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Flag, Timer, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -127,6 +127,14 @@ export function SessionDetail({
 
   return (
     <Stack gap="lg" className="pb-24">
+      <Link
+        href="/tracker"
+        className="text-muted-foreground hover:text-primary flex items-center gap-1 self-start text-sm"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {dict.nav.tracking}
+      </Link>
+
       <div className="flex flex-col items-center gap-2 pt-4 text-center">
         <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
           {dict.activeTracking.duration}
