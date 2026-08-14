@@ -40,6 +40,10 @@ export const trainingSessionExercises = pgTable(
     sets: integer('sets').notNull(),
     reps: integer('reps').notNull(),
     weightKg: numeric('weight_kg', { precision: 6, scale: 2, mode: 'number' }),
+    // Rest taken after this set. Null until a rest period tied to this row
+    // ends (skip, or a manual +15s/edit adjustment); reused as the default
+    // rest duration the next time this exercise is logged.
+    restSeconds: integer('rest_seconds'),
     position: integer('position').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
