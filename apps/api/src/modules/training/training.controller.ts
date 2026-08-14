@@ -61,6 +61,40 @@ export class TrainingController {
         return { status: 201, body: exercise };
       },
 
+      updateSessionSet: async ({ params, body }) => {
+        const exercise = await this.trainingService.updateSet(
+          params.sessionId,
+          params.exerciseId,
+          params.setId,
+          userId,
+          body,
+        );
+        if (!exercise) return { status: 404, body: { message: 'Set not found' } };
+        return { status: 200, body: exercise };
+      },
+
+      removeSessionSet: async ({ params }) => {
+        const removed = await this.trainingService.removeSet(
+          params.sessionId,
+          params.exerciseId,
+          params.setId,
+          userId,
+        );
+        if (!removed) return { status: 404, body: { message: 'Set not found' } };
+        return { status: 204, body: undefined };
+      },
+
+      updateSessionExerciseNotes: async ({ params, body }) => {
+        const exercise = await this.trainingService.updateExerciseNotes(
+          params.sessionId,
+          params.exerciseId,
+          userId,
+          body.notes,
+        );
+        if (!exercise) return { status: 404, body: { message: 'Exercise not found' } };
+        return { status: 200, body: exercise };
+      },
+
       updateSessionExerciseRest: async ({ params, body }) => {
         const exercise = await this.trainingService.updateExerciseRest(
           params.sessionId,

@@ -46,6 +46,7 @@ export class TrainingService {
     return this.trainingRepository.removeSession(id, userId);
   }
 
+  /** Logs one set. Finds-or-creates the exercise group, then appends the set. */
   async addExercise(
     sessionId: string,
     userId: string,
@@ -53,16 +54,73 @@ export class TrainingService {
   ): Promise<TrainingSessionExercise | undefined> {
     const session = await this.trainingRepository.findSessionById(sessionId, userId);
     if (!session) return undefined;
-    const position = await this.trainingRepository.nextPosition(sessionId);
-    const created = await this.trainingRepository.addExercise({
-      sessionId,
-      exerciseId: input.exerciseId,
-      sets: input.sets,
+
+    let group = await this.trainingRepository.findGroupByExercise(sessionId, input.exerciseId);
+    if (!group) {
+      const position = await this.trainingRepository.nextPosition(sessionId);
+      group = await this.trainingRepository.createExerciseGroup({
+        sessionId,
+        exerciseId: input.exerciseId,
+        position,
+      });
+    }
+
+    const setPosition = await this.trainingRepository.nextSetPosition(group.id);
+    await this.trainingRepository.addSet({
+      sessionExerciseId: group.id,
       reps: input.reps,
       weightKg: input.weightKg ?? null,
-      position,
+      position: setPosition,
     });
-    return this.trainingRepository.findSessionExerciseById(created.id, sessionId);
+
+    return this.trainingRepository.findSessionExerciseById(group.id, sessionId);
+  }
+
+  async updateSet(
+    sessionId: string,
+    exerciseLogId: string,
+    setId: string,
+    userId: string,
+    input: { reps: number; weightKg: number | null },
+  ): Promise<TrainingSessionExercise | undefined> {
+    const session = await this.trainingRepository.findSessionById(sessionId, userId);
+    if (!session) return undefined;
+    const updated = await this.trainingRepository.updateSet(setId, exerciseLogId, input);
+    if (!updated) return undefined;
+    return this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
+  }
+
+  /** Removes one set; if it was the group's last set, removes the group too. */
+  async removeSet(
+    sessionId: string,
+    exerciseLogId: string,
+    setId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const session = await this.trainingRepository.findSessionById(sessionId, userId);
+    if (!session) return false;
+    const removed = await this.trainingRepository.removeSet(setId, exerciseLogId);
+    if (!removed) return false;
+    const hasRemaining = await this.trainingRepository.hasRemainingSets(exerciseLogId);
+    if (!hasRemaining) await this.trainingRepository.removeExercise(exerciseLogId, sessionId);
+    return true;
+  }
+
+  async updateExerciseNotes(
+    sessionId: string,
+    exerciseLogId: string,
+    userId: string,
+    notes: string | null,
+  ): Promise<TrainingSessionExercise | undefined> {
+    const session = await this.trainingRepository.findSessionById(sessionId, userId);
+    if (!session) return undefined;
+    const updated = await this.trainingRepository.updateExerciseNotes(
+      exerciseLogId,
+      sessionId,
+      notes,
+    );
+    if (!updated) return undefined;
+    return this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
   }
 
   async updateExerciseRest(
