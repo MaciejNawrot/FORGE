@@ -1,5 +1,6 @@
 import { Card, Text } from '@acme/ui';
 import { Dumbbell } from 'lucide-react';
+import { ActiveSessionBanner } from '@/components/active-session-banner';
 import { AddTrainingForm } from '@/components/add-training-form';
 import { SessionListItem } from '@/components/session-list-item';
 import { StartPlanButton } from '@/components/start-plan-button';
@@ -40,6 +41,8 @@ export default async function TrackerPage() {
         <Text variant="heading" className="font-display text-primary text-3xl uppercase">
           {dict.nav.tracking}
         </Text>
+
+        <ActiveSessionBanner />
 
         <div className="flex flex-col gap-3">
           <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">

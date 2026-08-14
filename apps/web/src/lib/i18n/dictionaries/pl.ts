@@ -157,6 +157,8 @@ export const pl: Dictionary = {
     history: 'Historia',
     recentTrainings: 'Ostatnie treningi',
     noTrainings: 'Brak zapisanych treningów — rozpocznij jeden powyżej.',
+    activeSessionMessage: 'Trening w toku',
+    continue: 'Kontynuuj',
   },
 
   activeTracking: {

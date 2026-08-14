@@ -147,6 +147,8 @@ export const en = {
     history: 'History',
     recentTrainings: 'Recent Trainings',
     noTrainings: 'No trainings logged yet — start one above.',
+    activeSessionMessage: 'Training in progress',
+    continue: 'Continue',
   },
 
   activeTracking: {
