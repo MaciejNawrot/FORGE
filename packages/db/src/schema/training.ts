@@ -41,11 +41,6 @@ export const trainingSessionExercises = pgTable(
     exerciseId: uuid('exercise_id')
       .notNull()
       .references(() => exercises.id),
-    // Legacy bundled fields — still present so the Task 2 data migration
-    // has a source to copy from. Dropped in Task 3 once that's done.
-    sets: integer('sets').notNull(),
-    reps: integer('reps').notNull(),
-    weightKg: numeric('weight_kg', { precision: 6, scale: 2, mode: 'number' }),
     notes: text('notes'),
     // Rest taken after a set of this exercise. Null until a rest period
     // ends (skip, or a manual +15s/edit adjustment); reused as the default
