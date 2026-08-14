@@ -13,6 +13,7 @@ export const trainingSessionExerciseSchema = z.object({
   sets: z.number().int().min(1).max(50),
   reps: z.number().int().min(1).max(500),
   weightKg: z.coerce.number().min(0).max(1000).nullable(),
+  restSeconds: z.number().int().min(0).nullable(),
   position: z.number().int().min(0),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -26,6 +27,11 @@ export const addTrainingSessionExerciseInputSchema = z.object({
   weightKg: z.number().min(0).max(1000).nullable().optional(),
 });
 export type AddTrainingSessionExerciseInput = z.infer<typeof addTrainingSessionExerciseInputSchema>;
+
+export const updateSessionExerciseRestInputSchema = z.object({
+  restSeconds: z.number().int().min(0),
+});
+export type UpdateSessionExerciseRestInput = z.infer<typeof updateSessionExerciseRestInputSchema>;
 
 export const trainingSessionSchema = z.object({
   id: z.string().uuid(),
@@ -85,6 +91,7 @@ export const lastPerformanceEntrySchema = z.object({
   sets: z.number().int().min(1).max(50),
   reps: z.number().int().min(1).max(500),
   weightKg: z.coerce.number().min(0).max(1000).nullable(),
+  restSeconds: z.number().int().min(0).nullable(),
   date: z.string(),
 });
 export type LastPerformanceEntry = z.infer<typeof lastPerformanceEntrySchema>;

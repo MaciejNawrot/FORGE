@@ -14,6 +14,7 @@ import {
   trainingSessionIdParamsSchema,
   trainingSessionSchema,
   trainingSessionWithExercisesSchema,
+  updateSessionExerciseRestInputSchema,
 } from '../schemas/training.schema.js';
 
 const c = initContract();
@@ -82,6 +83,18 @@ export const trainingContract = c.router({
       404: errorResponseSchema,
     },
     summary: 'Add an exercise to a training session',
+  },
+  updateSessionExerciseRest: {
+    method: 'PATCH',
+    path: '/training-sessions/:sessionId/exercises/:exerciseId/rest',
+    pathParams: trainingSessionExerciseParamsSchema,
+    body: updateSessionExerciseRestInputSchema,
+    responses: {
+      200: trainingSessionExerciseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Update the rest time recorded for a logged exercise',
   },
   removeSessionExercise: {
     method: 'DELETE',
