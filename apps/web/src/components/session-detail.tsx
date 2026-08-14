@@ -59,7 +59,12 @@ function useCountdown(
       setRemaining((current) => Math.max(0, current - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [active, seconds]);
+    // `seconds` seeds `remaining` only when a rest period starts (active
+    // flips false -> true). It's deliberately left out of the dependency
+    // array: a caller changing the target duration mid-rest (+15s, manual
+    // edit) must not restart the tick and wipe elapsed progress — callers
+    // use the returned `setRemaining` directly for that instead.
+  }, [active]);
 
   const minutes = Math.floor(remaining / 60);
   const secs = remaining % 60;
