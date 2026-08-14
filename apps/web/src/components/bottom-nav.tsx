@@ -19,10 +19,12 @@ export function BottomNav() {
           const active = isNavLinkActive(pathname, href);
           const label = dict.nav[labelKey];
           const showActiveBadge = href === '/tracker' && activeSession !== null;
+          const targetHref =
+            href === '/tracker' && activeSession ? `/tracker/${activeSession.sessionId}` : href;
           return (
             <Link
               key={href}
-              href={href}
+              href={targetHref}
               className={`flex flex-col items-center justify-center gap-1 rounded-full px-4 py-1 transition-all active:scale-90 ${
                 active
                   ? 'bg-primary text-primary-foreground'
@@ -50,10 +52,12 @@ export function BottomNav() {
           const active = isNavLinkActive(pathname, href);
           const label = dict.nav[labelKey];
           const showActiveBadge = href === '/tracker' && activeSession !== null;
+          const targetHref =
+            href === '/tracker' && activeSession ? `/tracker/${activeSession.sessionId}` : href;
           return (
             <Link
               key={href}
-              href={href}
+              href={targetHref}
               title={label}
               className={`flex h-11 w-11 items-center justify-center rounded-full transition-all active:scale-90 ${
                 active
