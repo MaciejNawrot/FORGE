@@ -57,4 +57,5 @@ Opening a second session while one is active: its page reads the store, sees `ac
 - No database schema or contract changes — "active" stays a client-only concept, per the explicit decision to have zustand own it.
 - No separate "End" control distinct from "Finish" — they're the same action.
 - No change to exercise logging availability based on timer state.
+- No cross-tab sync of the active session. `localStorage` is shared per-browser, but the store only re-reads it on mount — a second tab opened before a first tab's `start()` won't see it and could start its own session, overwriting the first tab's entry. The original problem statement cited two tabs as a cause of "more than one active session"; this only fixes it for sequential navigation within a tab (or a fresh tab load), not two tabs open and interacted with concurrently. Deliberately left out — a `storage`-event listener is real complexity for a single-user app where this is an edge case, not the common path.
 - No cross-device sync of "active session" (localStorage is per-browser).
