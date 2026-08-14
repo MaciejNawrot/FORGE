@@ -65,6 +65,23 @@ export class TrainingService {
     return this.trainingRepository.findSessionExerciseById(created.id, sessionId);
   }
 
+  async updateExerciseRest(
+    sessionId: string,
+    exerciseLogId: string,
+    userId: string,
+    restSeconds: number,
+  ): Promise<TrainingSessionExercise | undefined> {
+    const session = await this.trainingRepository.findSessionById(sessionId, userId);
+    if (!session) return undefined;
+    const updated = await this.trainingRepository.updateExerciseRest(
+      exerciseLogId,
+      sessionId,
+      restSeconds,
+    );
+    if (!updated) return undefined;
+    return this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
+  }
+
   async removeExercise(sessionId: string, exerciseId: string, userId: string): Promise<boolean> {
     const session = await this.trainingRepository.findSessionById(sessionId, userId);
     if (!session) return false;

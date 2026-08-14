@@ -78,6 +78,7 @@ export class TrainingRepository {
         sets: trainingSessionExercises.sets,
         reps: trainingSessionExercises.reps,
         weightKg: trainingSessionExercises.weightKg,
+        restSeconds: trainingSessionExercises.restSeconds,
         position: trainingSessionExercises.position,
         createdAt: trainingSessionExercises.createdAt,
         updatedAt: trainingSessionExercises.updatedAt,
@@ -101,6 +102,7 @@ export class TrainingRepository {
         sets: trainingSessionExercises.sets,
         reps: trainingSessionExercises.reps,
         weightKg: trainingSessionExercises.weightKg,
+        restSeconds: trainingSessionExercises.restSeconds,
         position: trainingSessionExercises.position,
         createdAt: trainingSessionExercises.createdAt,
         updatedAt: trainingSessionExercises.updatedAt,
@@ -135,6 +137,17 @@ export class TrainingRepository {
     return row;
   }
 
+  async updateExerciseRest(id: string, sessionId: string, restSeconds: number): Promise<boolean> {
+    const updated = await this.db
+      .update(trainingSessionExercises)
+      .set({ restSeconds, updatedAt: new Date() })
+      .where(
+        and(eq(trainingSessionExercises.id, id), eq(trainingSessionExercises.sessionId, sessionId)),
+      )
+      .returning({ id: trainingSessionExercises.id });
+    return updated.length > 0;
+  }
+
   async removeExercise(id: string, sessionId: string): Promise<boolean> {
     const deleted = await this.db
       .delete(trainingSessionExercises)
@@ -148,13 +161,25 @@ export class TrainingRepository {
   async lastPerformanceByExerciseIds(
     userId: string,
     exerciseIds: string[],
-  ): Promise<Map<string, { sets: number; reps: number; weightKg: number | null; date: string }>> {
+  ): Promise<
+    Map<
+      string,
+      {
+        sets: number;
+        reps: number;
+        weightKg: number | null;
+        restSeconds: number | null;
+        date: string;
+      }
+    >
+  > {
     const rows = await this.db
       .select({
         exerciseId: trainingSessionExercises.exerciseId,
         sets: trainingSessionExercises.sets,
         reps: trainingSessionExercises.reps,
         weightKg: trainingSessionExercises.weightKg,
+        restSeconds: trainingSessionExercises.restSeconds,
         date: trainingSessions.date,
         createdAt: trainingSessionExercises.createdAt,
       })
@@ -170,7 +195,13 @@ export class TrainingRepository {
 
     const result = new Map<
       string,
-      { sets: number; reps: number; weightKg: number | null; date: string }
+      {
+        sets: number;
+        reps: number;
+        weightKg: number | null;
+        restSeconds: number | null;
+        date: string;
+      }
     >();
     for (const row of rows) {
       // Rows are ordered most-recent-first, so the first row seen per
@@ -180,6 +211,7 @@ export class TrainingRepository {
           sets: row.sets,
           reps: row.reps,
           weightKg: row.weightKg,
+          restSeconds: row.restSeconds,
           date: row.date,
         });
       }

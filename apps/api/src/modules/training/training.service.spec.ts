@@ -13,6 +13,7 @@ function createRepositoryMock(overrides: Partial<TrainingRepository> = {}): Trai
     findSessionExerciseById: vi.fn(),
     nextPosition: vi.fn(),
     addExercise: vi.fn(),
+    updateExerciseRest: vi.fn(),
     removeExercise: vi.fn(),
     lastPerformanceByExerciseIds: vi.fn(),
     ...overrides,
@@ -29,6 +30,35 @@ describe('TrainingService.finishSession', () => {
     await service.finishSession('session-1', 'user-1', 120);
 
     expect(repository.finishSession).toHaveBeenCalledWith('session-1', 'user-1', 120);
+  });
+});
+
+describe('TrainingService.updateExerciseRest', () => {
+  it('returns undefined without updating when the session is not owned by the user', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue(undefined),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.updateExerciseRest('session-1', 'log-1', 'user-1', 120);
+
+    expect(result).toBeUndefined();
+    expect(repository.updateExerciseRest).not.toHaveBeenCalled();
+  });
+
+  it('updates the row and returns the enriched exercise on success', async () => {
+    const enriched = { id: 'log-1', sessionId: 'session-1', restSeconds: 120 };
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1', userId: 'user-1' }),
+      updateExerciseRest: vi.fn().mockResolvedValue(true),
+      findSessionExerciseById: vi.fn().mockResolvedValue(enriched),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.updateExerciseRest('session-1', 'log-1', 'user-1', 120);
+
+    expect(repository.updateExerciseRest).toHaveBeenCalledWith('log-1', 'session-1', 120);
+    expect(result).toBe(enriched);
   });
 });
 

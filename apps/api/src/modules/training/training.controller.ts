@@ -61,6 +61,17 @@ export class TrainingController {
         return { status: 201, body: exercise };
       },
 
+      updateSessionExerciseRest: async ({ params, body }) => {
+        const exercise = await this.trainingService.updateExerciseRest(
+          params.sessionId,
+          params.exerciseId,
+          userId,
+          body.restSeconds,
+        );
+        if (!exercise) return { status: 404, body: { message: 'Exercise not found' } };
+        return { status: 200, body: exercise };
+      },
+
       removeSessionExercise: async ({ params }) => {
         const removed = await this.trainingService.removeExercise(
           params.sessionId,
