@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useActiveSession } from '@/lib/active-session-store';
 import { useLocale } from '@/lib/i18n/context';
-import { isNavLinkActive, primaryNavLinks } from '@/lib/nav-links';
+import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/lib/nav-links';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -19,8 +19,7 @@ export function BottomNav() {
           const active = isNavLinkActive(pathname, href);
           const label = dict.nav[labelKey];
           const showActiveBadge = href === '/tracker' && activeSession !== null;
-          const targetHref =
-            href === '/tracker' && activeSession ? `/tracker/${activeSession.sessionId}` : href;
+          const targetHref = navLinkHref(href, activeSession?.sessionId ?? null);
           return (
             <Link
               key={href}
@@ -52,8 +51,7 @@ export function BottomNav() {
           const active = isNavLinkActive(pathname, href);
           const label = dict.nav[labelKey];
           const showActiveBadge = href === '/tracker' && activeSession !== null;
-          const targetHref =
-            href === '/tracker' && activeSession ? `/tracker/${activeSession.sessionId}` : href;
+          const targetHref = navLinkHref(href, activeSession?.sessionId ?? null);
           return (
             <Link
               key={href}

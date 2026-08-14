@@ -10,3 +10,7 @@ export const primaryNavLinks = [
 export function isNavLinkActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href);
 }
+
+export function navLinkHref(href: string, activeSessionId: string | null): string {
+  return href === '/tracker' && activeSessionId ? `/tracker/${activeSessionId}` : href;
+}

@@ -4,9 +4,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ClipboardList, LogOut, Settings, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useActiveSession, useActiveSessionStore } from '@/lib/active-session-store';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
-import { isNavLinkActive, primaryNavLinks } from '@/lib/nav-links';
+import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/lib/nav-links';
 import { sessionQueryKey, useSession } from '@/lib/use-session';
 
 const secondaryNavLinks = [
@@ -24,9 +25,11 @@ export function Nav() {
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const { dict } = useLocale();
+  const activeSession = useActiveSession();
 
   async function handleLogout(event: { currentTarget: HTMLElement }) {
     closeMenu(event);
+    useActiveSessionStore.getState().end();
     await apiClient.auth.logout();
     await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
   }
@@ -43,7 +46,7 @@ export function Nav() {
           return (
             <Link
               key={href}
-              href={href}
+              href={navLinkHref(href, activeSession?.sessionId ?? null)}
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors ${
                 active
                   ? 'bg-primary text-primary-foreground'
