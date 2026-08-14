@@ -487,7 +487,7 @@ function AddSessionExerciseCard({
   onRepsChange: (value: number) => void;
   weightKg: string;
   onWeightKgChange: (value: string) => void;
-  onAdded: () => void;
+  onAdded: (loggedExercise: { id: string; restSeconds: number | null }) => void;
 }) {
   const { dict } = useLocale();
 
@@ -523,12 +523,13 @@ function AddSessionExerciseCard({
       if (result.status !== 201) throw new Error(result.body.message);
       return result.body;
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
+      const priorRestSeconds = lastPerformance?.restSeconds ?? null;
       onSelect(null);
       onSetsChange(3);
       onRepsChange(10);
       onWeightKgChange('');
-      onAdded();
+      onAdded({ id: created.id, restSeconds: priorRestSeconds });
     },
   });
 
