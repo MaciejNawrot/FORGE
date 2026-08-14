@@ -3,16 +3,24 @@ import type {
   ExerciseRow,
   NewTrainingSessionExerciseRow,
   NewTrainingSessionRow,
+  NewTrainingSessionSetRow,
   TrainingSessionExerciseRow,
   TrainingSessionRow,
+  TrainingSessionSetRow,
 } from '@acme/db';
-import { exercises, trainingSessionExercises, trainingSessions } from '@acme/db';
+import {
+  exercises,
+  trainingSessionExercises,
+  trainingSessionSets,
+  trainingSessions,
+} from '@acme/db';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, gte, inArray, lte, max } from 'drizzle-orm';
 import { DATABASE } from '../../common/database/database.module.js';
 
 export type TrainingSessionExerciseWithExercise = TrainingSessionExerciseRow & {
   exercise: ExerciseRow;
+  sets: TrainingSessionSetRow[];
 };
 
 @Injectable()
@@ -69,15 +77,33 @@ export class TrainingRepository {
     return deleted.length > 0;
   }
 
+  private async attachSets(
+    groups: (TrainingSessionExerciseRow & { exercise: ExerciseRow })[],
+  ): Promise<TrainingSessionExerciseWithExercise[]> {
+    if (groups.length === 0) return [];
+    const groupIds = groups.map((group) => group.id);
+    const sets = await this.db
+      .select()
+      .from(trainingSessionSets)
+      .where(inArray(trainingSessionSets.sessionExerciseId, groupIds))
+      .orderBy(asc(trainingSessionSets.position));
+
+    const setsByGroup = new Map<string, TrainingSessionSetRow[]>();
+    for (const set of sets) {
+      const existing = setsByGroup.get(set.sessionExerciseId) ?? [];
+      existing.push(set);
+      setsByGroup.set(set.sessionExerciseId, existing);
+    }
+    return groups.map((group) => ({ ...group, sets: setsByGroup.get(group.id) ?? [] }));
+  }
+
   async listSessionExercises(sessionId: string): Promise<TrainingSessionExerciseWithExercise[]> {
-    return this.db
+    const groups = await this.db
       .select({
         id: trainingSessionExercises.id,
         sessionId: trainingSessionExercises.sessionId,
         exerciseId: trainingSessionExercises.exerciseId,
-        sets: trainingSessionExercises.sets,
-        reps: trainingSessionExercises.reps,
-        weightKg: trainingSessionExercises.weightKg,
+        notes: trainingSessionExercises.notes,
         restSeconds: trainingSessionExercises.restSeconds,
         position: trainingSessionExercises.position,
         createdAt: trainingSessionExercises.createdAt,
@@ -88,6 +114,7 @@ export class TrainingRepository {
       .innerJoin(exercises, eq(exercises.id, trainingSessionExercises.exerciseId))
       .where(eq(trainingSessionExercises.sessionId, sessionId))
       .orderBy(asc(trainingSessionExercises.position));
+    return this.attachSets(groups);
   }
 
   async findSessionExerciseById(
@@ -99,9 +126,7 @@ export class TrainingRepository {
         id: trainingSessionExercises.id,
         sessionId: trainingSessionExercises.sessionId,
         exerciseId: trainingSessionExercises.exerciseId,
-        sets: trainingSessionExercises.sets,
-        reps: trainingSessionExercises.reps,
-        weightKg: trainingSessionExercises.weightKg,
+        notes: trainingSessionExercises.notes,
         restSeconds: trainingSessionExercises.restSeconds,
         position: trainingSessionExercises.position,
         createdAt: trainingSessionExercises.createdAt,
@@ -114,10 +139,12 @@ export class TrainingRepository {
         and(eq(trainingSessionExercises.id, id), eq(trainingSessionExercises.sessionId, sessionId)),
       )
       .limit(1);
-    return row;
+    if (!row) return undefined;
+    const [withSets] = await this.attachSets([row]);
+    return withSets;
   }
 
-  /** Next free `position` for a new exercise appended to the end of a session. */
+  /** Next free `position` for a new exercise group appended to the end of a session. */
   async nextPosition(sessionId: string): Promise<number> {
     const [row] = await this.db
       .select({ value: max(trainingSessionExercises.position) })
@@ -126,15 +153,97 @@ export class TrainingRepository {
     return (row?.value ?? -1) + 1;
   }
 
-  async addExercise(
-    input: Pick<
-      NewTrainingSessionExerciseRow,
-      'sessionId' | 'exerciseId' | 'sets' | 'reps' | 'weightKg' | 'position'
-    >,
+  async findGroupByExercise(
+    sessionId: string,
+    exerciseId: string,
+  ): Promise<TrainingSessionExerciseRow | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(trainingSessionExercises)
+      .where(
+        and(
+          eq(trainingSessionExercises.sessionId, sessionId),
+          eq(trainingSessionExercises.exerciseId, exerciseId),
+        ),
+      )
+      .limit(1);
+    return row;
+  }
+
+  async createExerciseGroup(
+    input: Pick<NewTrainingSessionExerciseRow, 'sessionId' | 'exerciseId' | 'position'>,
   ): Promise<TrainingSessionExerciseRow> {
     const [row] = await this.db.insert(trainingSessionExercises).values(input).returning();
     if (!row) throw new Error('Insert did not return a row');
     return row;
+  }
+
+  /** Next free `position` for a new set appended within one exercise group. */
+  async nextSetPosition(sessionExerciseId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ value: max(trainingSessionSets.position) })
+      .from(trainingSessionSets)
+      .where(eq(trainingSessionSets.sessionExerciseId, sessionExerciseId));
+    return (row?.value ?? -1) + 1;
+  }
+
+  async addSet(
+    input: Pick<NewTrainingSessionSetRow, 'sessionExerciseId' | 'reps' | 'weightKg' | 'position'>,
+  ): Promise<TrainingSessionSetRow> {
+    const [row] = await this.db.insert(trainingSessionSets).values(input).returning();
+    if (!row) throw new Error('Insert did not return a row');
+    return row;
+  }
+
+  async updateSet(
+    setId: string,
+    sessionExerciseId: string,
+    input: { reps: number; weightKg: number | null },
+  ): Promise<boolean> {
+    const updated = await this.db
+      .update(trainingSessionSets)
+      .set({ reps: input.reps, weightKg: input.weightKg, updatedAt: new Date() })
+      .where(
+        and(
+          eq(trainingSessionSets.id, setId),
+          eq(trainingSessionSets.sessionExerciseId, sessionExerciseId),
+        ),
+      )
+      .returning({ id: trainingSessionSets.id });
+    return updated.length > 0;
+  }
+
+  async removeSet(setId: string, sessionExerciseId: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(trainingSessionSets)
+      .where(
+        and(
+          eq(trainingSessionSets.id, setId),
+          eq(trainingSessionSets.sessionExerciseId, sessionExerciseId),
+        ),
+      )
+      .returning({ id: trainingSessionSets.id });
+    return deleted.length > 0;
+  }
+
+  async hasRemainingSets(sessionExerciseId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: trainingSessionSets.id })
+      .from(trainingSessionSets)
+      .where(eq(trainingSessionSets.sessionExerciseId, sessionExerciseId))
+      .limit(1);
+    return row !== undefined;
+  }
+
+  async updateExerciseNotes(id: string, sessionId: string, notes: string | null): Promise<boolean> {
+    const updated = await this.db
+      .update(trainingSessionExercises)
+      .set({ notes, updatedAt: new Date() })
+      .where(
+        and(eq(trainingSessionExercises.id, id), eq(trainingSessionExercises.sessionId, sessionId)),
+      )
+      .returning({ id: trainingSessionExercises.id });
+    return updated.length > 0;
   }
 
   async updateExerciseRest(id: string, sessionId: string, restSeconds: number): Promise<boolean> {
@@ -162,28 +271,22 @@ export class TrainingRepository {
     userId: string,
     exerciseIds: string[],
   ): Promise<
-    Map<
-      string,
-      {
-        sets: number;
-        reps: number;
-        weightKg: number | null;
-        restSeconds: number | null;
-        date: string;
-      }
-    >
+    Map<string, { reps: number; weightKg: number | null; restSeconds: number | null; date: string }>
   > {
     const rows = await this.db
       .select({
         exerciseId: trainingSessionExercises.exerciseId,
-        sets: trainingSessionExercises.sets,
-        reps: trainingSessionExercises.reps,
-        weightKg: trainingSessionExercises.weightKg,
+        reps: trainingSessionSets.reps,
+        weightKg: trainingSessionSets.weightKg,
         restSeconds: trainingSessionExercises.restSeconds,
         date: trainingSessions.date,
-        createdAt: trainingSessionExercises.createdAt,
+        setCreatedAt: trainingSessionSets.createdAt,
       })
-      .from(trainingSessionExercises)
+      .from(trainingSessionSets)
+      .innerJoin(
+        trainingSessionExercises,
+        eq(trainingSessionExercises.id, trainingSessionSets.sessionExerciseId),
+      )
       .innerJoin(trainingSessions, eq(trainingSessions.id, trainingSessionExercises.sessionId))
       .where(
         and(
@@ -191,24 +294,17 @@ export class TrainingRepository {
           inArray(trainingSessionExercises.exerciseId, exerciseIds),
         ),
       )
-      .orderBy(desc(trainingSessions.date), desc(trainingSessionExercises.createdAt));
+      .orderBy(desc(trainingSessions.date), desc(trainingSessionSets.createdAt));
 
     const result = new Map<
       string,
-      {
-        sets: number;
-        reps: number;
-        weightKg: number | null;
-        restSeconds: number | null;
-        date: string;
-      }
+      { reps: number; weightKg: number | null; restSeconds: number | null; date: string }
     >();
     for (const row of rows) {
       // Rows are ordered most-recent-first, so the first row seen per
-      // exercise id is that exercise's most recent logged performance.
+      // exercise id is that exercise's most recently logged individual set.
       if (!result.has(row.exerciseId)) {
         result.set(row.exerciseId, {
-          sets: row.sets,
           reps: row.reps,
           weightKg: row.weightKg,
           restSeconds: row.restSeconds,
