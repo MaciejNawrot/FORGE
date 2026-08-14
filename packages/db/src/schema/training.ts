@@ -27,6 +27,10 @@ export const trainingSessions = pgTable(
   (table) => [index('training_sessions_userId_date_idx').on(table.userId, table.date)],
 );
 
+// A logged exercise "group" within a session — which exercise, an optional
+// note, and the rest-time default. The physical sets live in
+// `trainingSessionSets`, not here (see below): a bench press entry might
+// be 50kg×5, 50kg×4, 60kg×5, each independently editable.
 export const trainingSessionExercises = pgTable(
   'training_session_exercises',
   {
@@ -37,10 +41,13 @@ export const trainingSessionExercises = pgTable(
     exerciseId: uuid('exercise_id')
       .notNull()
       .references(() => exercises.id),
+    // Legacy bundled fields — still present so the Task 2 data migration
+    // has a source to copy from. Dropped in Task 3 once that's done.
     sets: integer('sets').notNull(),
     reps: integer('reps').notNull(),
     weightKg: numeric('weight_kg', { precision: 6, scale: 2, mode: 'number' }),
-    // Rest taken after this set. Null until a rest period tied to this row
+    notes: text('notes'),
+    // Rest taken after a set of this exercise. Null until a rest period
     // ends (skip, or a manual +15s/edit adjustment); reused as the default
     // rest duration the next time this exercise is logged.
     restSeconds: integer('rest_seconds'),
@@ -51,18 +58,45 @@ export const trainingSessionExercises = pgTable(
   (table) => [index('training_session_exercises_sessionId_idx').on(table.sessionId)],
 );
 
+export const trainingSessionSets = pgTable(
+  'training_session_sets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sessionExerciseId: uuid('session_exercise_id')
+      .notNull()
+      .references(() => trainingSessionExercises.id, { onDelete: 'cascade' }),
+    reps: integer('reps').notNull(),
+    weightKg: numeric('weight_kg', { precision: 6, scale: 2, mode: 'number' }),
+    position: integer('position').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('training_session_sets_sessionExerciseId_idx').on(table.sessionExerciseId)],
+);
+
 export const trainingSessionRelations = relations(trainingSessions, ({ many }) => ({
   exercises: many(trainingSessionExercises),
 }));
 
-export const trainingSessionExerciseRelations = relations(trainingSessionExercises, ({ one }) => ({
-  session: one(trainingSessions, {
-    fields: [trainingSessionExercises.sessionId],
-    references: [trainingSessions.id],
+export const trainingSessionExerciseRelations = relations(
+  trainingSessionExercises,
+  ({ one, many }) => ({
+    session: one(trainingSessions, {
+      fields: [trainingSessionExercises.sessionId],
+      references: [trainingSessions.id],
+    }),
+    exercise: one(exercises, {
+      fields: [trainingSessionExercises.exerciseId],
+      references: [exercises.id],
+    }),
+    sets: many(trainingSessionSets),
   }),
-  exercise: one(exercises, {
-    fields: [trainingSessionExercises.exerciseId],
-    references: [exercises.id],
+);
+
+export const trainingSessionSetRelations = relations(trainingSessionSets, ({ one }) => ({
+  sessionExercise: one(trainingSessionExercises, {
+    fields: [trainingSessionSets.sessionExerciseId],
+    references: [trainingSessionExercises.id],
   }),
 }));
 
@@ -70,3 +104,5 @@ export type TrainingSessionRow = typeof trainingSessions.$inferSelect;
 export type NewTrainingSessionRow = typeof trainingSessions.$inferInsert;
 export type TrainingSessionExerciseRow = typeof trainingSessionExercises.$inferSelect;
 export type NewTrainingSessionExerciseRow = typeof trainingSessionExercises.$inferInsert;
+export type TrainingSessionSetRow = typeof trainingSessionSets.$inferSelect;
+export type NewTrainingSessionSetRow = typeof trainingSessionSets.$inferInsert;
