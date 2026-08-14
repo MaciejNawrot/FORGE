@@ -13,8 +13,11 @@ import {
   trainingSessionExerciseSchema,
   trainingSessionIdParamsSchema,
   trainingSessionSchema,
+  trainingSessionSetParamsSchema,
   trainingSessionWithExercisesSchema,
+  updateSessionExerciseNotesInputSchema,
   updateSessionExerciseRestInputSchema,
+  updateTrainingSessionSetInputSchema,
 } from '../schemas/training.schema.js';
 
 const c = initContract();
@@ -32,7 +35,7 @@ export const trainingContract = c.router({
     path: '/training-sessions/exercises/last-performance',
     query: lastPerformanceQuerySchema,
     responses: { 200: z.array(lastPerformanceEntrySchema), 401: errorResponseSchema },
-    summary: "Get the current user's most recent logged performance per exercise",
+    summary: "Get the current user's most recently logged set per exercise",
   },
   getSession: {
     method: 'GET',
@@ -43,7 +46,7 @@ export const trainingContract = c.router({
       401: errorResponseSchema,
       404: errorResponseSchema,
     },
-    summary: 'Get a training session with its exercises',
+    summary: 'Get a training session with its exercises and their sets',
   },
   createSession: {
     method: 'POST',
@@ -82,7 +85,40 @@ export const trainingContract = c.router({
       401: errorResponseSchema,
       404: errorResponseSchema,
     },
-    summary: 'Add an exercise to a training session',
+    summary:
+      'Log a set for an exercise in a training session (creates the exercise entry on first use)',
+  },
+  updateSessionSet: {
+    method: 'PATCH',
+    path: '/training-sessions/:sessionId/exercises/:exerciseId/sets/:setId',
+    pathParams: trainingSessionSetParamsSchema,
+    body: updateTrainingSessionSetInputSchema,
+    responses: {
+      200: trainingSessionExerciseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Update a single logged set',
+  },
+  removeSessionSet: {
+    method: 'DELETE',
+    path: '/training-sessions/:sessionId/exercises/:exerciseId/sets/:setId',
+    pathParams: trainingSessionSetParamsSchema,
+    body: c.noBody(),
+    responses: { 204: c.noBody(), 401: errorResponseSchema, 404: errorResponseSchema },
+    summary: 'Remove a single logged set (removes the exercise entry too if it was the last set)',
+  },
+  updateSessionExerciseNotes: {
+    method: 'PATCH',
+    path: '/training-sessions/:sessionId/exercises/:exerciseId/notes',
+    pathParams: trainingSessionExerciseParamsSchema,
+    body: updateSessionExerciseNotesInputSchema,
+    responses: {
+      200: trainingSessionExerciseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Update the note attached to a logged exercise',
   },
   updateSessionExerciseRest: {
     method: 'PATCH',
@@ -102,6 +138,6 @@ export const trainingContract = c.router({
     pathParams: trainingSessionExerciseParamsSchema,
     body: c.noBody(),
     responses: { 204: c.noBody(), 401: errorResponseSchema, 404: errorResponseSchema },
-    summary: 'Remove an exercise from a training session',
+    summary: 'Remove an exercise (and all its sets) from a training session',
   },
 });

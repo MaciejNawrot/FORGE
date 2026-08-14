@@ -6,15 +6,25 @@ const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 export const trainingTypeSchema = z.enum(['strength', 'cardio', 'mobility', 'rest']);
 export type TrainingTypeValue = z.infer<typeof trainingTypeSchema>;
 
+export const trainingSessionSetSchema = z.object({
+  id: z.string().uuid(),
+  sessionExerciseId: z.string().uuid(),
+  reps: z.number().int().min(1).max(500),
+  weightKg: z.coerce.number().min(0).max(1000).nullable(),
+  position: z.number().int().min(0),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+export type TrainingSessionSet = z.infer<typeof trainingSessionSetSchema>;
+
 export const trainingSessionExerciseSchema = z.object({
   id: z.string().uuid(),
   sessionId: z.string().uuid(),
   exercise: exerciseSchema,
-  sets: z.number().int().min(1).max(50),
-  reps: z.number().int().min(1).max(500),
-  weightKg: z.coerce.number().min(0).max(1000).nullable(),
+  notes: z.string().max(2000).nullable(),
   restSeconds: z.number().int().min(0).nullable(),
   position: z.number().int().min(0),
+  sets: z.array(trainingSessionSetSchema),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -22,11 +32,21 @@ export type TrainingSessionExercise = z.infer<typeof trainingSessionExerciseSche
 
 export const addTrainingSessionExerciseInputSchema = z.object({
   exerciseId: z.string().uuid(),
-  sets: z.number().int().min(1).max(50),
   reps: z.number().int().min(1).max(500),
   weightKg: z.number().min(0).max(1000).nullable().optional(),
 });
 export type AddTrainingSessionExerciseInput = z.infer<typeof addTrainingSessionExerciseInputSchema>;
+
+export const updateTrainingSessionSetInputSchema = z.object({
+  reps: z.number().int().min(1).max(500),
+  weightKg: z.number().min(0).max(1000).nullable(),
+});
+export type UpdateTrainingSessionSetInput = z.infer<typeof updateTrainingSessionSetInputSchema>;
+
+export const updateSessionExerciseNotesInputSchema = z.object({
+  notes: z.string().max(2000).nullable(),
+});
+export type UpdateSessionExerciseNotesInput = z.infer<typeof updateSessionExerciseNotesInputSchema>;
 
 export const updateSessionExerciseRestInputSchema = z.object({
   restSeconds: z.number().int().min(0),
@@ -86,9 +106,15 @@ export const trainingSessionExerciseParamsSchema = z.object({
 });
 export type TrainingSessionExerciseParams = z.infer<typeof trainingSessionExerciseParamsSchema>;
 
+export const trainingSessionSetParamsSchema = z.object({
+  sessionId: z.string().uuid(),
+  exerciseId: z.string().uuid(),
+  setId: z.string().uuid(),
+});
+export type TrainingSessionSetParams = z.infer<typeof trainingSessionSetParamsSchema>;
+
 export const lastPerformanceEntrySchema = z.object({
   exerciseId: z.string().uuid(),
-  sets: z.number().int().min(1).max(50),
   reps: z.number().int().min(1).max(500),
   weightKg: z.coerce.number().min(0).max(1000).nullable(),
   restSeconds: z.number().int().min(0).nullable(),
