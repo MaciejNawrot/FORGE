@@ -23,7 +23,7 @@ import { trainingTypeStyles } from '@/lib/training-colors';
 
 const REST_SECONDS = 90;
 
-function useElapsedTime(since: Date | string | number | null): string {
+function useElapsedTime(since: number | null): string {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -34,15 +34,7 @@ function useElapsedTime(since: Date | string | number | null): string {
 
   if (since == null) return '0:00';
 
-  // Crossing the Server -> Client Component boundary serializes `Date` props
-  // to plain ISO strings, so this can't assume `since` is still a `Date`.
-  const sinceMs =
-    typeof since === 'number'
-      ? since
-      : since instanceof Date
-        ? since.getTime()
-        : new Date(since).getTime();
-  const elapsed = Math.max(0, Math.floor((now - sinceMs) / 1000));
+  const elapsed = Math.max(0, Math.floor((now - since) / 1000));
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
@@ -127,7 +119,10 @@ export function SessionDetail({
       const result = await apiClient.training.removeSession({ params: { id: session.id } });
       if (result.status !== 204) throw new Error(result.body.message);
     },
-    onSuccess: () => router.push('/tracker'),
+    onSuccess: () => {
+      if (isThisSessionActive) end();
+      router.push('/tracker');
+    },
   });
 
   return (

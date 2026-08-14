@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -28,9 +29,11 @@ export function isSessionExpired(startedAt: number, now: number): boolean {
 
 /** The store's active session, or null if none is set or it's older than 4 hours. */
 export function useActiveSession(): { sessionId: string; startedAt: number } | null {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const activeSessionId = useActiveSessionStore((state) => state.activeSessionId);
   const startedAt = useActiveSessionStore((state) => state.startedAt);
-  if (!activeSessionId || !startedAt) return null;
+  if (!hydrated || !activeSessionId || !startedAt) return null;
   if (isSessionExpired(startedAt, Date.now())) return null;
   return { sessionId: activeSessionId, startedAt };
 }
