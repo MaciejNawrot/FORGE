@@ -3,7 +3,7 @@
 import { Card, Input, Stack, Text } from '@acme/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { EquipmentIcon } from '@/components/equipment-icon';
+import { EquipmentIcon } from '@/features/exercises';
 import { apiClient } from '@/shared/api';
 import { useLocale } from '@/shared/i18n/context';
 

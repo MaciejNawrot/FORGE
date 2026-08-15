@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Equipment } from '@/lib/exercise-library';
+import type { Equipment } from '../lib/exercise-library';
 
 const paths: Record<Equipment, ReactNode> = {
   barbell: (
