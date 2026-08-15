@@ -8,7 +8,7 @@ import type {
 } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -125,13 +125,13 @@ export function SessionDetail({
     const durationSeconds = Math.max(0, Math.floor((Date.now() - activeSession.startedAt) / 1000));
     finishSession.mutate(durationSeconds);
   };
+
   const [resting, setResting] = useState(false);
   const [editingRest, setEditingRest] = useState(false);
   const [restSeconds, setRestSeconds] = useState(REST_SECONDS);
   const [restExerciseLogId, setRestExerciseLogId] = useState<string | null>(null);
   const rest = useCountdown(resting, restSeconds);
   const [selected, setSelected] = useState<Exercise | null>(null);
-  const [sets, setSets] = useState(3);
   const [reps, setReps] = useState(10);
   const [weightKg, setWeightKg] = useState('');
 
@@ -188,6 +188,13 @@ export function SessionDetail({
 
   const handleResetRest = () => {
     rest.setRemaining(restSeconds);
+  };
+
+  const handleSetLogged = (logged: { id: string; restSeconds: number | null }) => {
+    setRestExerciseLogId(logged.id);
+    setRestSeconds(logged.restSeconds ?? REST_SECONDS);
+    setResting(true);
+    router.refresh();
   };
 
   return (
@@ -275,7 +282,6 @@ export function SessionDetail({
                   onClick={() => {
                     setSelected(planExercise.exercise);
                     const prefill = prefillFrom(planExercise, last);
-                    setSets(prefill.sets);
                     setReps(prefill.reps);
                     setWeightKg(prefill.weightKg);
                   }}
@@ -285,12 +291,7 @@ export function SessionDetail({
                     <Text className="font-medium">{planExercise.exercise.name}</Text>
                     <Text tone="muted" variant="caption" className="font-data">
                       {last
-                        ? dict.activeTracking.lastTime(
-                            last.weightKg,
-                            last.reps,
-                            last.sets,
-                            last.date,
-                          )
+                        ? dict.activeTracking.lastTime(last.weightKg, last.reps, last.date)
                         : dict.sessionDetail.exerciseLine(
                             planExercise.weightKg,
                             planExercise.reps,
@@ -310,44 +311,33 @@ export function SessionDetail({
         loggedExercises={session.exercises}
         selected={selected}
         onSelect={setSelected}
-        sets={sets}
-        onSetsChange={setSets}
         reps={reps}
         onRepsChange={setReps}
         weightKg={weightKg}
         onWeightKgChange={setWeightKg}
-        onAdded={(loggedExercise) => {
-          setRestExerciseLogId(loggedExercise.id);
-          setRestSeconds(loggedExercise.restSeconds ?? REST_SECONDS);
-          setResting(true);
-          router.refresh();
-        }}
+        onSetLogged={handleSetLogged}
       />
 
-      <Card className="glass-panel">
-        <Text
-          tone="muted"
-          variant="caption"
-          className="font-data mb-3 block tracking-widest uppercase"
-        >
-          {dict.activeTracking.previousSets}
-        </Text>
-        {session.exercises.length === 0 ? (
+      {session.exercises.length === 0 ? (
+        <Card className="glass-panel">
           <Text tone="muted">{dict.sessionDetail.noSets}</Text>
-        ) : (
-          <Stack gap="sm">
-            {session.exercises.map((exercise, index) => (
-              <SessionExerciseRow
-                key={exercise.id}
-                index={index + 1}
-                sessionId={session.id}
-                exercise={exercise}
-                onRemoved={() => router.refresh()}
-              />
-            ))}
-          </Stack>
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <Stack gap="sm">
+          <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
+            {dict.activeTracking.loggedExercises}
+          </Text>
+          {session.exercises.map((exercise) => (
+            <ExerciseLogCard
+              key={exercise.id}
+              sessionId={session.id}
+              exercise={exercise}
+              onSetLogged={handleSetLogged}
+              onChanged={() => router.refresh()}
+            />
+          ))}
+        </Stack>
+      )}
 
       {(resting || isThisSessionActive) && (
         <div className="glass-panel fixed inset-x-4 bottom-[76px] z-40 flex items-center justify-between gap-3 rounded-full p-2 md:right-6 md:bottom-24 md:left-auto md:w-auto">
@@ -442,18 +432,125 @@ export function SessionDetail({
   );
 }
 
-function SessionExerciseRow({
-  index,
+/** Tap-to-edit number: renders as a plain button until clicked, then an input that commits on blur/Enter. Empty commits `null` (bodyweight/unset); callers that don't accept `null` (e.g. reps) should ignore a `null` commit. */
+function EditableNumber({
+  value,
+  onCommit,
+  suffix,
+  className,
+}: {
+  value: number | null;
+  onCommit: (value: number | null) => void;
+  suffix?: string;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <input
+        type="number"
+        min={0}
+        step="0.5"
+        // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
+        autoFocus
+        defaultValue={value ?? ''}
+        onFocus={(e) => e.currentTarget.select()}
+        onBlur={(e) => {
+          const raw = e.target.value.trim();
+          if (raw === '') {
+            onCommit(null);
+          } else {
+            const parsed = Number(raw);
+            onCommit(Number.isFinite(parsed) ? Math.max(0, parsed) : value);
+          }
+          setEditing(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+        }}
+        className={`w-14 bg-transparent outline-none ${className ?? ''}`}
+      />
+    );
+  }
+
+  return (
+    <button type="button" onClick={() => setEditing(true)} className={className}>
+      {value ?? '—'}
+      {suffix}
+    </button>
+  );
+}
+
+function ExerciseLogCard({
   sessionId,
   exercise,
-  onRemoved,
+  onSetLogged,
+  onChanged,
 }: {
-  index: number;
   sessionId: string;
   exercise: TrainingSessionWithExercises['exercises'][number];
-  onRemoved: () => void;
+  onSetLogged: (loggedExercise: { id: string; restSeconds: number | null }) => void;
+  onChanged: () => void;
 }) {
   const { dict } = useLocale();
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [editingRestBadge, setEditingRestBadge] = useState(false);
+
+  const updateNotes = useMutation({
+    mutationFn: async (notes: string | null) => {
+      const result = await apiClient.training.updateSessionExerciseNotes({
+        params: { sessionId, exerciseId: exercise.id },
+        body: { notes },
+      });
+      if (result.status !== 200) throw new Error(result.body.message);
+      return result.body;
+    },
+    onSuccess: onChanged,
+  });
+
+  const updateRest = useMutation({
+    mutationFn: async (value: number) => {
+      const result = await apiClient.training.updateSessionExerciseRest({
+        params: { sessionId, exerciseId: exercise.id },
+        body: { restSeconds: value },
+      });
+      if (result.status !== 200) throw new Error(result.body.message);
+      return result.body;
+    },
+    onSuccess: onChanged,
+  });
+
+  const updateSet = useMutation({
+    mutationFn: async ({
+      setId,
+      reps,
+      weightKg,
+    }: {
+      setId: string;
+      reps: number;
+      weightKg: number | null;
+    }) => {
+      const result = await apiClient.training.updateSessionSet({
+        params: { sessionId, exerciseId: exercise.id, setId },
+        body: { reps, weightKg },
+      });
+      if (result.status !== 200) throw new Error(result.body.message);
+      return result.body;
+    },
+    onSuccess: onChanged,
+  });
+
+  const removeSet = useMutation({
+    mutationFn: async (setId: string) => {
+      const result = await apiClient.training.removeSessionSet({
+        params: { sessionId, exerciseId: exercise.id, setId },
+      });
+      if (result.status !== 204) throw new Error(result.body.message);
+    },
+    onSuccess: onChanged,
+  });
+
   const removeExercise = useMutation({
     mutationFn: async () => {
       const result = await apiClient.training.removeSessionExercise({
@@ -461,24 +558,45 @@ function SessionExerciseRow({
       });
       if (result.status !== 204) throw new Error(result.body.message);
     },
-    onSuccess: onRemoved,
+    onSuccess: onChanged,
   });
 
+  const lastSet = exercise.sets[exercise.sets.length - 1];
+
   return (
-    <div className="bg-muted flex items-center justify-between gap-3 rounded-lg p-3">
-      <div className="flex items-center gap-3">
-        <div className="bg-accent font-data flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm">
-          {index}
-        </div>
-        <div className="flex flex-col">
-          <Text className="font-medium">{exercise.exercise.name}</Text>
-          <Text tone="muted" variant="caption" className="font-data">
-            {dict.sessionDetail.exerciseLine(exercise.weightKg, exercise.reps, exercise.sets)}
+    <Card className="glass-panel flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Text className="font-display text-primary text-lg uppercase">
+            {exercise.exercise.name}
           </Text>
+          {editingNotes ? (
+            <input
+              type="text"
+              // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
+              autoFocus
+              defaultValue={exercise.notes ?? ''}
+              onBlur={(e) => {
+                const value = e.target.value.trim();
+                updateNotes.mutate(value === '' ? null : value);
+                setEditingNotes(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+              }}
+              placeholder={dict.sessionDetail.notesPlaceholder}
+              className="text-muted-foreground font-data w-full bg-transparent text-xs outline-none"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditingNotes(true)}
+              className="text-muted-foreground hover:text-primary font-data text-left text-xs italic"
+            >
+              {exercise.notes || dict.sessionDetail.notesPlaceholder}
+            </button>
+          )}
         </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <CheckCircle2 className="text-primary h-5 w-5" aria-hidden="true" />
         <ConfirmButton
           variant="ghost"
           size="sm"
@@ -486,10 +604,174 @@ function SessionExerciseRow({
           description={dict.sessionDetail.removeExerciseDescription(exercise.exercise.name)}
           pending={removeExercise.isPending}
           onConfirm={() => removeExercise.mutate()}
+          className="text-destructive h-7 w-7 shrink-0 p-0"
         >
-          {dict.common.remove}
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </ConfirmButton>
       </div>
+
+      <div className="flex items-center gap-1.5">
+        <Timer className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
+        {editingRestBadge ? (
+          <input
+            type="number"
+            min={0}
+            // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
+            autoFocus
+            defaultValue={exercise.restSeconds ?? ''}
+            onFocus={(e) => e.currentTarget.select()}
+            onBlur={(e) => {
+              const raw = e.target.value.trim();
+              if (raw !== '') {
+                const value = Number(raw);
+                if (Number.isFinite(value)) updateRest.mutate(Math.max(0, value));
+              }
+              setEditingRestBadge(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+            className="font-data text-muted-foreground w-14 bg-transparent text-xs outline-none"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditingRestBadge(true)}
+            className="text-muted-foreground hover:text-primary font-data text-xs"
+          >
+            {exercise.restSeconds != null ? formatDuration(exercise.restSeconds) : '—'}
+          </button>
+        )}
+      </div>
+
+      <Stack gap="xs">
+        {exercise.sets.map((set, index) => (
+          <div
+            key={set.id}
+            className="bg-muted flex items-center justify-between gap-3 rounded-lg p-2"
+          >
+            <div className="bg-accent font-data flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs">
+              {index + 1}
+            </div>
+            <div className="font-data flex flex-1 items-center gap-2 text-sm">
+              <EditableNumber
+                value={set.reps}
+                onCommit={(value) => {
+                  if (value != null) {
+                    updateSet.mutate({ setId: set.id, reps: value, weightKg: set.weightKg });
+                  }
+                }}
+                className="text-primary tabular-nums"
+              />
+              <span className="text-muted-foreground">×</span>
+              <EditableNumber
+                value={set.weightKg}
+                onCommit={(value) =>
+                  updateSet.mutate({ setId: set.id, reps: set.reps, weightKg: value })
+                }
+                suffix=" kg"
+                className="text-primary tabular-nums"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => removeSet.mutate(set.id)}
+              className="text-muted-foreground hover:text-destructive shrink-0"
+              aria-label={dict.sessionDetail.deleteSetSr}
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        ))}
+      </Stack>
+
+      {lastSet && (
+        <AddSetForm
+          sessionId={sessionId}
+          exerciseId={exercise.exercise.id}
+          lastReps={lastSet.reps}
+          lastWeightKg={lastSet.weightKg}
+          onLogged={onSetLogged}
+        />
+      )}
+    </Card>
+  );
+}
+
+function CompactNumberInput({
+  value,
+  onChange,
+  step,
+  suffix,
+}: {
+  value: number | string;
+  onChange: (value: string) => void;
+  step?: string;
+  suffix?: string;
+}) {
+  return (
+    <div className="bg-muted border-border flex items-center gap-1 rounded-lg border px-2 py-1.5">
+      <input
+        type="number"
+        step={step}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="font-data text-primary w-12 bg-transparent text-sm outline-none"
+      />
+      {suffix && <span className="text-muted-foreground text-xs">{suffix}</span>}
+    </div>
+  );
+}
+
+function AddSetForm({
+  sessionId,
+  exerciseId,
+  lastReps,
+  lastWeightKg,
+  onLogged,
+}: {
+  sessionId: string;
+  exerciseId: string;
+  lastReps: number;
+  lastWeightKg: number | null;
+  onLogged: (loggedExercise: { id: string; restSeconds: number | null }) => void;
+}) {
+  const { dict } = useLocale();
+  const [reps, setReps] = useState(lastReps);
+  const [weightKg, setWeightKg] = useState(lastWeightKg == null ? '' : String(lastWeightKg));
+
+  const addSet = useMutation({
+    mutationFn: async () => {
+      const input: AddTrainingSessionExerciseInput = {
+        exerciseId,
+        reps,
+        weightKg: weightKg === '' ? undefined : Number(weightKg),
+      };
+      const result = await apiClient.training.addSessionExercise({
+        params: { sessionId },
+        body: input,
+      });
+      if (result.status !== 201) throw new Error(result.body.message);
+      return result.body;
+    },
+    onSuccess: (group) => {
+      onLogged({ id: group.id, restSeconds: group.restSeconds });
+    },
+  });
+
+  return (
+    <div className="flex items-center gap-2">
+      <CompactNumberInput value={reps} onChange={(v) => setReps(Number(v))} />
+      <span className="text-muted-foreground font-data text-sm">×</span>
+      <CompactNumberInput value={weightKg} onChange={setWeightKg} step="0.5" suffix="kg" />
+      <button
+        type="button"
+        disabled={addSet.isPending}
+        onClick={() => addSet.mutate()}
+        className="bg-primary text-primary-foreground font-data shrink-0 rounded-lg px-3 py-2 text-xs uppercase disabled:opacity-50"
+      >
+        {addSet.isPending ? dict.common.logging : dict.activeTracking.logSet}
+      </button>
     </div>
   );
 }
@@ -526,36 +808,32 @@ function AddSessionExerciseCard({
   loggedExercises,
   selected,
   onSelect,
-  sets,
-  onSetsChange,
   reps,
   onRepsChange,
   weightKg,
   onWeightKgChange,
-  onAdded,
+  onSetLogged,
 }: {
   sessionId: string;
   loggedExercises: TrainingSessionWithExercises['exercises'];
   selected: Exercise | null;
   onSelect: (exercise: Exercise | null) => void;
-  sets: number;
-  onSetsChange: (value: number) => void;
   reps: number;
   onRepsChange: (value: number) => void;
   weightKg: string;
   onWeightKgChange: (value: string) => void;
-  onAdded: (loggedExercise: { id: string; restSeconds: number | null }) => void;
+  onSetLogged: (loggedExercise: { id: string; restSeconds: number | null }) => void;
 }) {
   const { dict } = useLocale();
 
   const { data: lastPerformance } = useQuery({
     queryKey: ['last-performance', selected?.id],
     queryFn: async () => {
-      if (!selected) return undefined;
+      if (!selected) return null;
       const result = await apiClient.training.lastPerformance({
         query: { exerciseIds: selected.id },
       });
-      return result.status === 200 ? result.body[0] : undefined;
+      return result.status === 200 ? (result.body[0] ?? null) : null;
     },
     enabled: selected !== null,
   });
@@ -564,12 +842,11 @@ function AddSessionExerciseCard({
     ? alreadyTrainedGroups(selected.muscleGroups, loggedExercises)
     : [];
 
-  const addExercise = useMutation({
+  const addSet = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error('Pick an exercise first');
       const input: AddTrainingSessionExerciseInput = {
         exerciseId: selected.id,
-        sets,
         reps,
         weightKg: weightKg === '' ? undefined : Number(weightKg),
       };
@@ -580,13 +857,12 @@ function AddSessionExerciseCard({
       if (result.status !== 201) throw new Error(result.body.message);
       return result.body;
     },
-    onSuccess: (created) => {
+    onSuccess: (group) => {
       const priorRestSeconds = lastPerformance?.restSeconds ?? null;
       onSelect(null);
-      onSetsChange(3);
       onRepsChange(10);
       onWeightKgChange('');
-      onAdded({ id: created.id, restSeconds: priorRestSeconds });
+      onSetLogged({ id: group.id, restSeconds: group.restSeconds ?? priorRestSeconds });
     },
   });
 
@@ -606,7 +882,6 @@ function AddSessionExerciseCard({
                 {dict.activeTracking.lastTime(
                   lastPerformance.weightKg,
                   lastPerformance.reps,
-                  lastPerformance.sets,
                   lastPerformance.date,
                 )}
               </Text>
@@ -630,12 +905,7 @@ function AddSessionExerciseCard({
         <ExercisePicker onSelect={onSelect} />
       ) : (
         <Stack gap="sm">
-          <div className="grid grid-cols-3 gap-3">
-            <BigNumberInput
-              label={dict.common.sets}
-              value={sets}
-              onChange={(v) => onSetsChange(Number(v))}
-            />
+          <div className="grid grid-cols-2 gap-3">
             <BigNumberInput
               label={dict.common.reps}
               value={reps}
@@ -650,17 +920,17 @@ function AddSessionExerciseCard({
           </div>
           <button
             type="button"
-            disabled={addExercise.isPending}
-            onClick={() => addExercise.mutate()}
+            disabled={addSet.isPending}
+            onClick={() => addSet.mutate()}
             className="bg-primary text-primary-foreground font-display w-full rounded-lg py-4 uppercase tracking-wider transition-colors active:scale-[0.98] disabled:opacity-50"
           >
-            {addExercise.isPending ? dict.common.logging : dict.activeTracking.logSet}
+            {addSet.isPending ? dict.common.logging : dict.activeTracking.logSet}
           </button>
         </Stack>
       )}
-      {addExercise.isError && (
+      {addSet.isError && (
         <Text variant="caption" tone="destructive">
-          {addExercise.error.message}
+          {addSet.error.message}
         </Text>
       )}
     </Card>
