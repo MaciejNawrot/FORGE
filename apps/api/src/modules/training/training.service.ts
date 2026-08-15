@@ -85,6 +85,10 @@ export class TrainingService {
   ): Promise<TrainingSessionExercise | undefined> {
     const session = await this.trainingRepository.findSessionById(sessionId, userId);
     if (!session) return undefined;
+    // Repository set mutations scope by group id, not session id — verify the
+    // group really belongs to this session before touching anything.
+    const group = await this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
+    if (!group) return undefined;
     const updated = await this.trainingRepository.updateSet(setId, exerciseLogId, input);
     if (!updated) return undefined;
     return this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
@@ -99,6 +103,8 @@ export class TrainingService {
   ): Promise<boolean> {
     const session = await this.trainingRepository.findSessionById(sessionId, userId);
     if (!session) return false;
+    const group = await this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
+    if (!group) return false;
     const removed = await this.trainingRepository.removeSet(setId, exerciseLogId);
     if (!removed) return false;
     const hasRemaining = await this.trainingRepository.hasRemainingSets(exerciseLogId);

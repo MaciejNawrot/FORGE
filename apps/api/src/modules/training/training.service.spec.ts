@@ -127,10 +127,78 @@ describe('TrainingService.addExercise', () => {
   });
 });
 
+describe('TrainingService.updateSet', () => {
+  it('returns undefined without updating when the session is not owned by the user', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue(undefined),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.updateSet('session-1', 'group-1', 'set-1', 'user-1', {
+      reps: 5,
+      weightKg: 50,
+    });
+
+    expect(result).toBeUndefined();
+    expect(repository.updateSet).not.toHaveBeenCalled();
+  });
+
+  it('returns undefined without updating when the group belongs to another session', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1', userId: 'user-1' }),
+      findSessionExerciseById: vi.fn().mockResolvedValue(undefined),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.updateSet('session-1', 'group-1', 'set-1', 'user-1', {
+      reps: 5,
+      weightKg: 50,
+    });
+
+    expect(result).toBeUndefined();
+    expect(repository.updateSet).not.toHaveBeenCalled();
+  });
+
+  it('updates the set and returns the enriched exercise on success', async () => {
+    const enriched = { id: 'group-1', sessionId: 'session-1', sets: [{ id: 'set-1' }] };
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1', userId: 'user-1' }),
+      findSessionExerciseById: vi.fn().mockResolvedValue(enriched),
+      updateSet: vi.fn().mockResolvedValue(true),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.updateSet('session-1', 'group-1', 'set-1', 'user-1', {
+      reps: 5,
+      weightKg: 50,
+    });
+
+    expect(repository.updateSet).toHaveBeenCalledWith('set-1', 'group-1', {
+      reps: 5,
+      weightKg: 50,
+    });
+    expect(result).toBe(enriched);
+  });
+});
+
 describe('TrainingService.removeSet', () => {
+  it('returns false without deleting when the group belongs to another session', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1', userId: 'user-1' }),
+      findSessionExerciseById: vi.fn().mockResolvedValue(undefined),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.removeSet('session-1', 'group-1', 'set-1', 'user-1');
+
+    expect(result).toBe(false);
+    expect(repository.removeSet).not.toHaveBeenCalled();
+  });
+
   it('removes the exercise group too when the removed set was the last one', async () => {
     const repository = createRepositoryMock({
       findSessionById: vi.fn().mockResolvedValue({ id: 'session-1', userId: 'user-1' }),
+      findSessionExerciseById: vi.fn().mockResolvedValue({ id: 'group-1', sessionId: 'session-1' }),
       removeSet: vi.fn().mockResolvedValue(true),
       hasRemainingSets: vi.fn().mockResolvedValue(false),
       removeExercise: vi.fn().mockResolvedValue(true),
@@ -146,6 +214,7 @@ describe('TrainingService.removeSet', () => {
   it('leaves the group alone when other sets remain', async () => {
     const repository = createRepositoryMock({
       findSessionById: vi.fn().mockResolvedValue({ id: 'session-1', userId: 'user-1' }),
+      findSessionExerciseById: vi.fn().mockResolvedValue({ id: 'group-1', sessionId: 'session-1' }),
       removeSet: vi.fn().mockResolvedValue(true),
       hasRemainingSets: vi.fn().mockResolvedValue(true),
     });
