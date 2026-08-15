@@ -28,7 +28,7 @@ export function ExercisePicker({ onSelect }: { onSelect: (exercise: Exercise) =>
         onChange={(event) => setSearch(event.target.value)}
       />
       {results && results.length > 0 && (
-        <div className="border-border max-h-48 overflow-y-auto rounded-md border">
+        <div className="glass-panel max-h-48 overflow-y-auto rounded-md">
           {results.map((exercise) => (
             <button
               key={exercise.id}
@@ -37,10 +37,10 @@ export function ExercisePicker({ onSelect }: { onSelect: (exercise: Exercise) =>
                 onSelect(exercise);
                 setSearch('');
               }}
-              className="hover:bg-accent flex w-full flex-col items-start px-3 py-2 text-left"
+              className="hover:bg-accent flex w-full flex-col items-start px-3 py-2 text-left transition-colors"
             >
-              <span className="text-sm font-medium">{exercise.name}</span>
-              <span className="text-muted-foreground text-xs">
+              <span className="font-display uppercase">{exercise.name}</span>
+              <span className="text-muted-foreground font-data text-xs uppercase">
                 {exercise.muscleGroups.join(', ')}
               </span>
             </button>

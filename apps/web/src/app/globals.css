@@ -12,6 +12,15 @@ body {
   padding-bottom: 6rem;
 }
 
+button:not(:disabled),
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 .font-display {
   font-family: var(--font-display), sans-serif;
 }

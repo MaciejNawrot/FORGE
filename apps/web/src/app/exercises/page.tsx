@@ -24,7 +24,9 @@ export default function ExercisesPage() {
   return (
     <main className="mx-auto max-w-2xl p-6">
       <Stack gap="lg">
-        <Text variant="heading">{dict.exercises.title}</Text>
+        <Text variant="heading" className="font-display text-primary text-3xl uppercase">
+          {dict.exercises.title}
+        </Text>
         <Input
           placeholder={dict.common.searchExercises}
           value={search}
@@ -36,16 +38,19 @@ export default function ExercisesPage() {
             <Text tone="muted">{dict.common.noExercisesMatch(search)}</Text>
           )}
           {data?.map((exercise) => (
-            <Card key={exercise.id}>
+            <Card
+              key={exercise.id}
+              className="glass-panel hover:border-primary/50 transition-colors"
+            >
               <Stack direction="row" gap="sm" align="center">
                 <span className="bg-secondary text-secondary-foreground flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                   <EquipmentIcon equipment={exercise.equipment} className="h-5 w-5" />
                 </span>
                 <Stack gap="none" className="min-w-0 flex-1">
-                  <Text variant="body" className="block font-medium">
+                  <Text variant="body" className="font-display block uppercase">
                     {exercise.name}
                   </Text>
-                  <Text tone="muted" variant="caption" className="block">
+                  <Text tone="muted" variant="caption" className="font-data block">
                     {exercise.description}
                   </Text>
                 </Stack>
@@ -53,7 +58,7 @@ export default function ExercisesPage() {
                   {exercise.muscleGroups.map((group) => (
                     <span
                       key={group}
-                      className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs capitalize"
+                      className="bg-primary/15 text-primary font-data rounded-full px-2 py-0.5 text-xs uppercase"
                     >
                       {group}
                     </span>
