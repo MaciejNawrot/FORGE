@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from './api-client';
+import { apiClient } from '@/shared/api';
 
 export const sessionQueryKey = ['session'] as const;
 

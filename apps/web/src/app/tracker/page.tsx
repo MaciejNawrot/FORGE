@@ -5,8 +5,8 @@ import { AddTrainingForm } from '@/components/add-training-form';
 import { SessionListItem } from '@/components/session-list-item';
 import { StartPlanButton } from '@/components/start-plan-button';
 import { TrainingHeatmap } from '@/components/training-heatmap';
-import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerApiClient } from '@/shared/api';
 import { toLocalIsoDate, trainingTypeStyles } from '@/utils';
 
 export default async function TrackerPage() {

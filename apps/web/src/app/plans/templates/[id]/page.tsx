@@ -1,8 +1,8 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
 import { WorkoutTemplateDetail } from '@/components/workout-template-detail';
-import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerApiClient } from '@/shared/api';
 
 export default async function TemplateDetailPage({ params }: PageProps<'/plans/templates/[id]'>) {
   const dict = await getServerDictionary();

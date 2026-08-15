@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { Mascot } from '@/components/mascot';
 import { TrainingHeatmap } from '@/components/training-heatmap';
 import { VolumeChart } from '@/components/volume-chart';
-import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerApiClient } from '@/shared/api';
 import { toLocalIsoDate } from '@/utils';
 
 const RANGES = { '1W': 1, '1M': 4, '3M': 13, YTD: 52 } as const;

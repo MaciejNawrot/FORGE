@@ -7,8 +7,8 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
+import { apiClient } from '@/shared/api';
 import { toLocalIsoDate, trainingTypes } from '@/utils';
 
 type FormValues = z.infer<typeof createTrainingSessionInputSchema>;

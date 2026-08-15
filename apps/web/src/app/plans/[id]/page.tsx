@@ -1,8 +1,8 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
 import { PlanDetail } from '@/components/plan-detail';
-import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerApiClient } from '@/shared/api';
 
 export default async function PlanDetailPage({ params }: PageProps<'/plans/[id]'>) {
   const dict = await getServerDictionary();

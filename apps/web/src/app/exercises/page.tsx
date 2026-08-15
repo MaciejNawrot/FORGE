@@ -4,8 +4,8 @@ import { Card, Input, Stack, Text } from '@acme/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { EquipmentIcon } from '@/components/equipment-icon';
-import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
+import { apiClient } from '@/shared/api';
 
 export default function ExercisesPage() {
   const { dict } = useLocale();

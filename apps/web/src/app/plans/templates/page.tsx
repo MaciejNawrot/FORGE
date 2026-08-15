@@ -1,7 +1,7 @@
 import { Stack, Text } from '@acme/ui';
 import { TemplateLibrary } from '@/components/template-library';
-import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerApiClient } from '@/shared/api';
 
 export default async function TemplatesPage() {
   const dict = await getServerDictionary();

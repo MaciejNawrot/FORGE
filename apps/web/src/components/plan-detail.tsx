@@ -17,8 +17,8 @@ import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { ConfirmButton } from '@/components/confirm-button';
 import { ExercisePicker } from '@/components/exercise-picker';
-import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
+import { apiClient } from '@/shared/api';
 
 type PlanFormValues = z.infer<typeof updateWorkoutPlanInputSchema>;
 

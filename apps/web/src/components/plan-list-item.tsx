@@ -7,8 +7,8 @@ import { Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ConfirmButton } from '@/components/confirm-button';
-import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
+import { apiClient } from '@/shared/api';
 import { trainingTypeStyles } from '@/utils';
 
 export function PlanListItem({ plan }: { plan: WorkoutPlanListItem }) {
