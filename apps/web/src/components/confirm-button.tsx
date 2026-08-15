@@ -3,7 +3,7 @@
 import { Button, type ButtonProps } from '@acme/ui';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@acme/ui/web';
 import { useState } from 'react';
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 
 export function ConfirmButton({
   onConfirm,

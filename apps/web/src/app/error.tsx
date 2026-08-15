@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Stack, Text } from '@acme/ui';
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 
 export default function ErrorPage({
   error,

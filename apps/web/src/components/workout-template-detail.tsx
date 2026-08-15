@@ -5,8 +5,8 @@ import { Button, Card, Text } from '@acme/ui';
 import { useMutation } from '@tanstack/react-query';
 import { Dumbbell, ListOrdered, Play, Repeat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useLocale } from '@/lib/i18n/context';
 import { apiClient } from '@/shared/api';
+import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
 
 interface WorkoutTemplateDetailProps {

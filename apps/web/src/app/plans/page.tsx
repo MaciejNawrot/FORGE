@@ -3,8 +3,8 @@ import { Library } from 'lucide-react';
 import Link from 'next/link';
 import { CreatePlanForm } from '@/components/create-plan-form';
 import { PlanListItem } from '@/components/plan-list-item';
-import { getServerDictionary } from '@/lib/i18n/server';
 import { getServerApiClient } from '@/shared/api';
+import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function PlansPage() {
   const dict = await getServerDictionary();

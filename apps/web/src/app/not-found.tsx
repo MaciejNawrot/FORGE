@@ -1,6 +1,6 @@
 import { Button, Stack, Text } from '@acme/ui';
 import Link from 'next/link';
-import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function NotFound() {
   const dict = await getServerDictionary();

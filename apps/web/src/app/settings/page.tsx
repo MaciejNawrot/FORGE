@@ -1,7 +1,7 @@
 import { Card, Stack, Text } from '@acme/ui';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeSwitcher } from '@/components/theme-switcher';
-import { getServerDictionary } from '@/lib/i18n/server';
+import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function SettingsPage() {
   const dict = await getServerDictionary();

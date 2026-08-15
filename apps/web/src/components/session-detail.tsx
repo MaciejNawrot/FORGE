@@ -15,10 +15,10 @@ import { useEffect, useState } from 'react';
 import { ConfirmButton } from '@/components/confirm-button';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { useActiveSession, useActiveSessionStore } from '@/lib/active-session-store';
-import { useLocale } from '@/lib/i18n/context';
 import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';
 import { prefillFrom, unloggedPlanExercises } from '@/lib/plan-progress';
 import { apiClient } from '@/shared/api';
+import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
 
 const REST_SECONDS = 90;

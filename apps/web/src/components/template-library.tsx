@@ -6,7 +6,7 @@ import { Dumbbell, Repeat, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ForkTemplateButton } from '@/components/fork-template-button';
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
 
 function CategoryPill({

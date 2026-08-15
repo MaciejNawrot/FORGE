@@ -1,8 +1,8 @@
 import { Card, Stack, Text } from '@acme/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@acme/ui/web';
 import { CreateUserForm } from '@/components/create-user-form';
-import { getServerDictionary } from '@/lib/i18n/server';
 import { getServerApiClient } from '@/shared/api';
+import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function UsersPage() {
   const dict = await getServerDictionary();

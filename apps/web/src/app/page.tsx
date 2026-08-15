@@ -3,8 +3,8 @@ import { Dumbbell, Flame, Footprints, Play, Timer, TrendingUp } from 'lucide-rea
 import Link from 'next/link';
 import { SessionListItem } from '@/components/session-list-item';
 import { StreakBanner } from '@/components/streak-banner';
-import { getServerDictionary } from '@/lib/i18n/server';
 import { getServerApiClient } from '@/shared/api';
+import { getServerDictionary } from '@/shared/i18n/server';
 import { toLocalIsoDate } from '@/utils';
 
 export default async function Home() {

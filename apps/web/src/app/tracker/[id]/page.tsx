@@ -1,8 +1,8 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
 import { SessionDetail } from '@/components/session-detail';
-import { getServerDictionary } from '@/lib/i18n/server';
 import { getServerApiClient } from '@/shared/api';
+import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function TrainingSessionPage({ params }: PageProps<'/tracker/[id]'>) {
   const dict = await getServerDictionary();

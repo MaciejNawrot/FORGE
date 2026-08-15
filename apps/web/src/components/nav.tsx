@@ -5,9 +5,9 @@ import { ClipboardList, LogOut, Settings, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useActiveSession, useActiveSessionStore } from '@/lib/active-session-store';
-import { useLocale } from '@/lib/i18n/context';
 import { sessionQueryKey, useSession } from '@/lib/use-session';
 import { apiClient } from '@/shared/api';
+import { useLocale } from '@/shared/i18n/context';
 import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';
 
 const secondaryNavLinks = [

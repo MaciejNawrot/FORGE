@@ -3,7 +3,7 @@
 import { Card, Text } from '@acme/ui';
 import Link from 'next/link';
 import { useActiveSession } from '@/lib/active-session-store';
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 
 export function ActiveSessionBanner() {
   const { dict } = useLocale();

@@ -4,8 +4,8 @@ import type { Exercise } from '@acme/contracts';
 import { Input, Text } from '@acme/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useLocale } from '@/lib/i18n/context';
 import { apiClient } from '@/shared/api';
+import { useLocale } from '@/shared/i18n/context';
 
 export function ExercisePicker({ onSelect }: { onSelect: (exercise: Exercise) => void }) {
   const { dict } = useLocale();

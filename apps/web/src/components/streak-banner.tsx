@@ -3,7 +3,7 @@
 import { Card } from '@acme/ui';
 import { Flame, X } from 'lucide-react';
 import { useState } from 'react';
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 
 export function StreakBanner({ nextDay }: { nextDay: number }) {
   const { dict } = useLocale();

@@ -1,7 +1,7 @@
 'use client';
 
 import type { TrainingSession } from '@acme/contracts';
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 import { toLocalIsoDate, trainingTypeStyles, trainingTypes } from '@/utils';
 
 type Day = { date: string; sessions: TrainingSession[] };

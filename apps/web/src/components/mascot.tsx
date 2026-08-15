@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from '@/lib/i18n/context';
+import { useLocale } from '@/shared/i18n/context';
 
 const levels = [
   { min: 0, id: 'newbie', armRx: 7, abs: false, dumbbell: false },

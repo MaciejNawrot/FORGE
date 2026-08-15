@@ -3,8 +3,8 @@
 import { Button } from '@acme/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useLocale } from '@/lib/i18n/context';
 import { apiClient } from '@/shared/api';
+import { useLocale } from '@/shared/i18n/context';
 
 export function ForkTemplateButton({ templateId }: { templateId: string }) {
   const router = useRouter();

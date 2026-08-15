@@ -7,9 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { useLocale } from '@/lib/i18n/context';
 import { sessionQueryKey } from '@/lib/use-session';
 import { apiClient } from '@/shared/api';
+import { useLocale } from '@/shared/i18n/context';
 
 type LoginFormValues = z.infer<typeof loginInputSchema>;
 type RegisterFormValues = z.infer<typeof registerInputSchema>;

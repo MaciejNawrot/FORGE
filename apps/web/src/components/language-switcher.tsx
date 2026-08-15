@@ -1,8 +1,8 @@
 'use client';
 
 import { Check } from 'lucide-react';
-import { useLocale } from '@/lib/i18n/context';
-import { localeNames, locales } from '@/lib/i18n/locales';
+import { useLocale } from '@/shared/i18n/context';
+import { localeNames, locales } from '@/shared/i18n/locales';
 
 export function LanguageSwitcher() {
   const { locale, setLocale } = useLocale();
