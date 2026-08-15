@@ -1,9 +1,9 @@
 import { Card, Stack, Text } from '@acme/ui';
 import { Dumbbell, Flame, Footprints, Play, Timer, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { SessionListItem } from '@/components/session-list-item';
 import { StreakBanner } from '@/components/streak-banner';
 import { getServerApiClient } from '@/shared/api';
+import { SessionListItem } from '@/shared/components';
 import { getServerDictionary } from '@/shared/i18n/server';
 import { toLocalIsoDate } from '@/utils';
 

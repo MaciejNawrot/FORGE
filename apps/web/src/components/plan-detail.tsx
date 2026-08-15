@@ -15,9 +15,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { ConfirmButton } from '@/components/confirm-button';
-import { ExercisePicker } from '@/components/exercise-picker';
 import { apiClient } from '@/shared/api';
+import { ConfirmButton, ExercisePicker } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 
 type PlanFormValues = z.infer<typeof updateWorkoutPlanInputSchema>;

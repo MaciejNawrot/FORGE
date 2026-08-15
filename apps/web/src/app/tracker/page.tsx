@@ -2,10 +2,9 @@ import { Card, Text } from '@acme/ui';
 import { Dumbbell } from 'lucide-react';
 import { ActiveSessionBanner } from '@/components/active-session-banner';
 import { AddTrainingForm } from '@/components/add-training-form';
-import { SessionListItem } from '@/components/session-list-item';
 import { StartPlanButton } from '@/components/start-plan-button';
-import { TrainingHeatmap } from '@/components/training-heatmap';
 import { getServerApiClient } from '@/shared/api';
+import { SessionListItem, TrainingHeatmap } from '@/shared/components';
 import { getServerDictionary } from '@/shared/i18n/server';
 import { toLocalIsoDate, trainingTypeStyles } from '@/utils';
 

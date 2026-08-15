@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Anton, Inter, JetBrains_Mono } from 'next/font/google';
-import { BottomNav } from '@/components/bottom-nav';
-import { Nav } from '@/components/nav';
+import { BottomNav, Nav } from '@/shared/components';
 import { LocaleProvider } from '@/shared/i18n/context';
 import { getServerLocale } from '@/shared/i18n/server';
 import { noFlashThemeScript } from '@/utils';

@@ -2,9 +2,9 @@ import { Card, Text } from '@acme/ui';
 import { Award, TrendingDown, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { Mascot } from '@/components/mascot';
-import { TrainingHeatmap } from '@/components/training-heatmap';
 import { VolumeChart } from '@/components/volume-chart';
 import { getServerApiClient } from '@/shared/api';
+import { TrainingHeatmap } from '@/shared/components';
 import { getServerDictionary } from '@/shared/i18n/server';
 import { toLocalIsoDate } from '@/utils';
 

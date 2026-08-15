@@ -6,8 +6,8 @@ import { useMutation } from '@tanstack/react-query';
 import { Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ConfirmButton } from '@/components/confirm-button';
 import { apiClient } from '@/shared/api';
+import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
 
