@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useActiveSession } from '@/lib/active-session-store';
+import { useActiveSession } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';
 

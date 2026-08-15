@@ -4,9 +4,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ClipboardList, LogOut, Settings, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useActiveSession, useActiveSessionStore } from '@/lib/active-session-store';
-import { sessionQueryKey, useSession } from '@/lib/use-session';
 import { apiClient } from '@/shared/api';
+import {
+  sessionQueryKey,
+  useActiveSession,
+  useActiveSessionStore,
+  useSession,
+} from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';
 

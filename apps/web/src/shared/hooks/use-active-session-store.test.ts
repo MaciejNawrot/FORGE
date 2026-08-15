@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isSessionExpired, useActiveSessionStore } from './active-session-store';
+import { isSessionExpired, useActiveSessionStore } from './use-active-session-store';
 
 describe('useActiveSessionStore', () => {
   beforeEach(() => {

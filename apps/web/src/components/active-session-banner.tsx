@@ -2,7 +2,7 @@
 
 import { Card, Text } from '@acme/ui';
 import Link from 'next/link';
-import { useActiveSession } from '@/lib/active-session-store';
+import { useActiveSession } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 
 export function ActiveSessionBanner() {
