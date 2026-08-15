@@ -4,4 +4,5 @@ export * from './card';
 export * from './chip';
 export * from './input';
 export * from './stack';
+export * from './switch';
 export * from './text';
