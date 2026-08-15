@@ -3,7 +3,10 @@
   "extends": "@acme/config/tsconfig/nextjs.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/utils/*": ["./src/utils/*"]
     }
   },
   "include": [
