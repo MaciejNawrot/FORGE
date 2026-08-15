@@ -92,16 +92,17 @@ export default async function ProgressPage({
       }
     }
     for (const exercise of session.exercises) {
-      const weight = exercise.weightKg ?? 0;
-      volumeByWeek[weekIndex] =
-        (volumeByWeek[weekIndex] ?? 0) + exercise.sets * exercise.reps * weight;
-      const best = bestByExercise.get(exercise.exercise.name);
-      if (weight > 0 && (!best || weight > best.weight)) {
-        bestByExercise.set(exercise.exercise.name, {
-          weight,
-          reps: exercise.reps,
-          date: session.date,
-        });
+      for (const set of exercise.sets) {
+        const weight = set.weightKg ?? 0;
+        volumeByWeek[weekIndex] = (volumeByWeek[weekIndex] ?? 0) + set.reps * weight;
+        const best = bestByExercise.get(exercise.exercise.name);
+        if (weight > 0 && (!best || weight > best.weight)) {
+          bestByExercise.set(exercise.exercise.name, {
+            weight,
+            reps: set.reps,
+            date: session.date,
+          });
+        }
       }
     }
   }
