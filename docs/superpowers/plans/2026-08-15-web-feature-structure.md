@@ -188,6 +188,8 @@ git commit -m "refactor(web): extract utils/ from lib/ (theme, training-colors, 
 **Interfaces:**
 - Produces: `@/shared/api` barrel exporting `apiClient`, `getServerApiClient`, `buildCookieHeader`.
 
+> **Correction found during Task 15's build verification, fixed there (not re-litigated here):** putting `getServerApiClient` in the same barrel as the client-safe `apiClient` is a bug. `api-server.ts` imports `next/headers`, which only Server Components may touch. `pnpm --filter @acme/web typecheck` doesn't catch this — Next's client/server module-boundary check runs only during `next build`, and this plan didn't run a full build until Task 15 — but a client component (`shared/components/nav.tsx`) imports `apiClient` from this exact barrel, and because both exports live in one module, that pulls `api-server.ts`'s whole module graph — including `next/headers` — into the client bundle. `next build` fails with "You're importing a module that depends on 'next/headers' ... in the Pages Router." The fix (applied in Task 15, see that section) is to drop `getServerApiClient` from this barrel entirely and have every Server Component page that needs it import `@/shared/api/api-server` directly (a deep import, the same exception already made for `shared/i18n/*`). If you are re-deriving this plan from scratch, save yourself the trip: write the barrel below as `export { apiClient } from './api-client'; export { buildCookieHeader } from './build-cookie-header';` (2 lines, no `getServerApiClient`) from the start, and give the 9 Server Component consumers below the `@/shared/api/api-server` deep-import line instead of the barrel line.
+
 - [ ] **Step 1: Move the three source files and the test**
 
 ```bash
@@ -1120,6 +1122,26 @@ pnpm --filter @acme/web lint
 pnpm --filter @acme/web test
 pnpm --filter @acme/web build
 ```
+
+`build` is expected to fail here with a Turbopack error naming `apps/web/src/shared/api/api-server.ts` and `next/headers`, "This API is only available in Server Components ... but you are using it in the Pages Router." This is not new breakage from this task — it's Task 3's barrel design shipping `getServerApiClient` (server-only, imports `next/headers`) from the same `@/shared/api` barrel that client components import `apiClient` from (see the note in Task 3). `typecheck` never catches this because it's a Next/Turbopack build-time module-boundary check, not a type error — this is the first task in the plan that runs a full `build`, so it's also the first point this surfaces.
+
+**Do not "fix" this by adding a `'use server'` directive to `api-server.ts`.** `'use server'` marks every export in the file as a Server Action (a client-callable RPC endpoint with serialization constraints on params/return values) — a completely different mechanism from "don't bundle this for the client." It happens to make the build error disappear (Next replaces the file's client-side representation with an RPC stub instead of erroring), but `getServerApiClient()` returns a typed API client object full of nested functions, which is not the kind of value a Server Action is meant to return, and it wrongly turns an internal helper into a real network-callable endpoint.
+
+The correct fix — apply it before running `build` again:
+
+1. In `apps/web/src/shared/api/index.ts`, remove the `export { getServerApiClient } from './api-server';` line. The barrel becomes:
+   ```ts
+   export { apiClient } from './api-client';
+   export { buildCookieHeader } from './build-cookie-header';
+   ```
+2. Update these 9 files — each currently has `import { getServerApiClient } from '@/shared/api';` as a standalone import line (no other symbols on that line) — to import from the submodule directly instead:
+   - Old: `import { getServerApiClient } from '@/shared/api';`
+   - New: `import { getServerApiClient } from '@/shared/api/api-server';`
+
+   Files: `app/page.tsx`, `app/progress/page.tsx`, `app/plans/page.tsx`, `app/plans/templates/page.tsx`, `app/plans/templates/[id]/page.tsx`, `app/plans/[id]/page.tsx`, `app/tracker/page.tsx`, `app/tracker/[id]/page.tsx`, `app/users/page.tsx`.
+3. `apps/web/src/shared/api/api-server.ts` gets no directive at all — it reads exactly as it did before this plan started (just relocated).
+
+Re-run `pnpm --filter @acme/web build`. Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
