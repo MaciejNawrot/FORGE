@@ -157,11 +157,11 @@ export const en = {
     alreadyActive: 'You already have an active training in progress.',
     goToActive: 'Go to it',
     logSet: 'Log Set',
-    previousSets: 'Previous Sets',
+    loggedExercises: 'Logged Exercises',
     resting: 'Resting…',
     suggestedNext: 'Suggested Next',
-    lastTime: (weightKg: number | null, reps: number, sets: number, date: string) =>
-      `Last time: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} reps × ${sets} sets (${date})`,
+    lastTime: (weightKg: number | null, reps: number, date: string) =>
+      `Last time: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} reps (${date})`,
     alreadyTrained: (muscleGroups: string) => `Already trained today: ${muscleGroups}`,
   },
 
@@ -172,6 +172,8 @@ export const en = {
       'This training session and its logged exercises will be permanently deleted.',
     deleteWorkoutSr: 'Delete workout',
     noSets: 'No sets logged yet — log your first one above.',
+    notesPlaceholder: 'Add a note…',
+    deleteSetSr: 'Delete set',
     finishTitle: 'Finish this workout?',
     finishDescription: 'You can keep logging sets later — this just takes you back to Tracking.',
     exerciseLine: (weightKg: number | null, reps: number, sets: number) =>

@@ -167,11 +167,11 @@ export const pl: Dictionary = {
     alreadyActive: 'Masz już aktywny trening w toku.',
     goToActive: 'Przejdź do niego',
     logSet: 'Zapisz serię',
-    previousSets: 'Poprzednie serie',
+    loggedExercises: 'Zapisane ćwiczenia',
     resting: 'Odpoczynek…',
     suggestedNext: 'Sugerowane kolejne',
-    lastTime: (weightKg: number | null, reps: number, sets: number, date: string) =>
-      `Poprzednio: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} powt. × ${sets} serie (${date})`,
+    lastTime: (weightKg: number | null, reps: number, date: string) =>
+      `Poprzednio: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} powt. (${date})`,
     alreadyTrained: (muscleGroups: string) => `Już trenowane dziś: ${muscleGroups}`,
   },
 
@@ -181,6 +181,8 @@ export const pl: Dictionary = {
     deleteDescription: 'Ten trening i wszystkie zapisane w nim ćwiczenia zostaną trwale usunięte.',
     deleteWorkoutSr: 'Usuń trening',
     noSets: 'Brak zapisanych serii — zapisz pierwszą powyżej.',
+    notesPlaceholder: 'Dodaj notatkę…',
+    deleteSetSr: 'Usuń serię',
     finishTitle: 'Zakończyć ten trening?',
     finishDescription:
       'Możesz wrócić do zapisywania serii później — to tylko przenosi Cię z powrotem do Śledzenia.',
