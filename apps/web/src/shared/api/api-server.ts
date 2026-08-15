@@ -1,3 +1,5 @@
+'use server';
+
 import { createApiClient } from '@acme/api-client';
 import { cookies } from 'next/headers';
 import { buildCookieHeader } from './build-cookie-header';
