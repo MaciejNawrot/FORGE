@@ -1,8 +1,9 @@
 import { Badge, Card, Text } from '@acme/ui';
 import { Dumbbell } from 'lucide-react';
+import Link from 'next/link';
 import { ActiveSessionBanner, AddTrainingForm, StartPlanButton } from '@/features/tracker';
 import { getServerApiClient } from '@/shared/api/api-server';
-import { SessionListItem, TrainingHeatmap } from '@/shared/components';
+import { TrainingHeatmap } from '@/shared/components';
 import { getServerDictionary } from '@/shared/i18n/server';
 import { toLocalIsoDate, trainingTypeStyles } from '@/utils';
 
@@ -33,7 +34,7 @@ export default async function TrackerPage() {
   const recent = [...sessions].reverse().slice(0, 8);
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-5xl p-6">
       <div className="flex flex-col gap-6">
         <Text variant="heading" className="font-display text-primary text-3xl uppercase">
           {dict.nav.tracking}
@@ -52,29 +53,35 @@ export default async function TrackerPage() {
               <Text tone="muted" variant="caption" className="font-data uppercase">
                 {dict.tracker.fromPlanHeading}
               </Text>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {plans.map((plan) => {
                   const style = plan.category ? trainingTypeStyles[plan.category] : null;
                   return (
                     <Card
                       key={plan.id}
-                      className="glass-panel flex items-center justify-between gap-3"
+                      className="glass-panel relative flex h-48 flex-col justify-between overflow-hidden"
                     >
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <Text className="truncate font-medium">{plan.name}</Text>
-                        <div className="text-muted-foreground font-data flex items-center gap-2 text-xs">
-                          {style && plan.category && (
-                            <Badge className={style.badge}>
-                              {dict.trainingType[plan.category]}
-                            </Badge>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Dumbbell className="h-3.5 w-3.5" aria-hidden="true" />
-                            {dict.common.exerciseCount(plan.exerciseCount)}
-                          </span>
-                        </div>
+                      <div className="from-primary/10 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent" />
+                      <div className="relative z-10">
+                        {style && plan.category ? (
+                          <Badge className={style.badge}>{dict.trainingType[plan.category]}</Badge>
+                        ) : (
+                          <span />
+                        )}
                       </div>
-                      <StartPlanButton planId={plan.id} category={plan.category} />
+                      <div className="relative z-10 flex flex-col gap-2">
+                        <Text
+                          variant="subheading"
+                          className="font-display text-primary truncate text-2xl uppercase"
+                        >
+                          {plan.name}
+                        </Text>
+                        <div className="text-muted-foreground font-data flex items-center gap-1 text-xs">
+                          <Dumbbell className="h-3.5 w-3.5" aria-hidden="true" />
+                          {dict.common.exerciseCount(plan.exerciseCount)}
+                        </div>
+                        <StartPlanButton planId={plan.id} category={plan.category} />
+                      </div>
                     </Card>
                   );
                 })}
@@ -101,7 +108,27 @@ export default async function TrackerPage() {
           {recent.length === 0 ? (
             <Text tone="muted">{dict.tracker.noTrainings}</Text>
           ) : (
-            recent.map((session) => <SessionListItem key={session.id} session={session} />)
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {recent.map((session) => {
+                const style = trainingTypeStyles[session.type];
+                return (
+                  <Link key={session.id} href={`/tracker/${session.id}`}>
+                    <Card className="glass-panel hover:border-primary/50 relative flex h-48 flex-col justify-between overflow-hidden transition-colors">
+                      <div className="from-primary/10 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent" />
+                      <div className="relative z-10">
+                        <Badge className={style.badge}>{dict.trainingType[session.type]}</Badge>
+                      </div>
+                      <Text
+                        variant="subheading"
+                        className="font-display text-primary relative z-10 text-2xl uppercase"
+                      >
+                        {session.date}
+                      </Text>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
