@@ -1,6 +1,6 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
-import { SessionDetail } from '@/components/session-detail';
+import { SessionDetail } from '@/features/tracker';
 import { getServerApiClient } from '@/shared/api';
 import { getServerDictionary } from '@/shared/i18n/server';
 
