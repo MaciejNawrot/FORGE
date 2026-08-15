@@ -38,8 +38,8 @@ export function AddPlanExerciseCard({ planId, onAdded }: { planId: string; onAdd
   });
 
   return (
-    <Card>
-      <Text variant="subheading" className="mb-3 block">
+    <Card className="glass-panel">
+      <Text variant="subheading" className="font-display mb-3 block text-xl uppercase">
         {dict.planDetail.addExercise}
       </Text>
       {selected ? (

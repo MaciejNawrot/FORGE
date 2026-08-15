@@ -2,10 +2,12 @@
 
 import type { WorkoutPlanWithExercises } from '@acme/contracts';
 import { updateWorkoutPlanInputSchema } from '@acme/contracts';
-import { Button, Card, Input, Stack, Text } from '@acme/ui';
+import { Badge, Button, Card, Input, Stack, Text } from '@acme/ui';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@acme/ui/web';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Dumbbell, Repeat } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,6 +15,7 @@ import type { z } from 'zod';
 import { apiClient } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
+import { trainingTypeStyles } from '@/utils';
 import { AddPlanExerciseCard } from './add-plan-exercise-card';
 import { ExerciseEditRow } from './exercise-edit-row';
 import { ExerciseRow } from './exercise-row';
@@ -23,6 +26,9 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
   const router = useRouter();
   const { dict } = useLocale();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const category = plan.category;
+  const style = category ? trainingTypeStyles[category] : null;
+  const totalSets = plan.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
 
   const planForm = useForm<PlanFormValues>({
     resolver: zodResolver(updateWorkoutPlanInputSchema),
@@ -47,57 +53,77 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
   });
 
   return (
-    <Stack gap="lg">
-      <Stack direction="row" justify="between" align="center">
-        <Text variant="heading">{plan.name}</Text>
-        <ConfirmButton
-          variant="ghost"
-          size="sm"
-          title={dict.planDetail.deletePlanTitle}
-          description={dict.planDetail.deletePlanDescription(plan.name)}
-          pending={removePlan.isPending}
-          onConfirm={() => removePlan.mutate()}
-        >
-          {dict.planDetail.deletePlan}
-        </ConfirmButton>
-      </Stack>
+    <Stack gap="lg" className="pb-24">
+      <Link
+        href="/plans"
+        className="text-muted-foreground hover:text-primary flex items-center gap-1 self-start text-sm"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {dict.plans.title}
+      </Link>
 
-      <Card>
-        <form onSubmit={planForm.handleSubmit((values) => updatePlan.mutate(values))}>
-          <Stack gap="sm">
-            <Stack gap="xs">
-              <Text variant="caption">{dict.common.name}</Text>
-              <Input {...planForm.register('name')} />
-              {planForm.formState.errors.name && (
-                <Text variant="caption" tone="destructive">
-                  {planForm.formState.errors.name.message}
-                </Text>
+      <section className="glass-panel relative overflow-hidden rounded-3xl p-8">
+        <div className="from-primary/20 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent" />
+        <form
+          onSubmit={planForm.handleSubmit((values) => updatePlan.mutate(values))}
+          className="relative z-10 flex flex-col gap-4"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="font-data flex flex-wrap gap-2 text-xs uppercase">
+              {style && category && (
+                <Badge className={style.badge}>{dict.trainingType[category]}</Badge>
               )}
-            </Stack>
-            <Stack gap="xs">
-              <Text variant="caption">{dict.planDetail.notes}</Text>
-              <textarea
-                className="border-border bg-background text-foreground focus-visible:ring-ring rounded-md border px-3 py-2 text-base focus-visible:ring-2 focus-visible:outline-none"
-                rows={2}
-                {...planForm.register('notes')}
-              />
-            </Stack>
-            <Stack direction="row" gap="sm" align="center">
-              <Button type="submit" size="sm" disabled={updatePlan.isPending}>
-                {updatePlan.isPending ? dict.common.saving : dict.common.save}
-              </Button>
-              {updatePlan.isError && (
-                <Text variant="caption" tone="destructive">
-                  {updatePlan.error.message}
-                </Text>
-              )}
-            </Stack>
+              <Badge tone="muted">
+                <Dumbbell className="h-3.5 w-3.5" aria-hidden="true" />
+                {dict.common.exerciseCount(plan.exercises.length)}
+              </Badge>
+              <Badge tone="muted">
+                <Repeat className="h-3.5 w-3.5" aria-hidden="true" />
+                {dict.common.setCount(totalSets)}
+              </Badge>
+            </div>
+            <ConfirmButton
+              variant="ghost"
+              size="sm"
+              title={dict.planDetail.deletePlanTitle}
+              description={dict.planDetail.deletePlanDescription(plan.name)}
+              pending={removePlan.isPending}
+              onConfirm={() => removePlan.mutate()}
+            >
+              {dict.planDetail.deletePlan}
+            </ConfirmButton>
+          </div>
+
+          <Input
+            {...planForm.register('name')}
+            className="font-display text-primary h-auto border-none bg-transparent p-0 text-4xl uppercase focus-visible:ring-0 md:text-5xl"
+          />
+          {planForm.formState.errors.name && (
+            <Text variant="caption" tone="destructive">
+              {planForm.formState.errors.name.message}
+            </Text>
+          )}
+          <textarea
+            placeholder={dict.planDetail.notes}
+            rows={2}
+            {...planForm.register('notes')}
+            className="text-muted-foreground placeholder:text-muted-foreground w-full max-w-xl resize-none bg-transparent text-sm outline-none"
+          />
+          <Stack direction="row" gap="sm" align="center">
+            <Button type="submit" size="sm" disabled={updatePlan.isPending}>
+              {updatePlan.isPending ? dict.common.saving : dict.common.save}
+            </Button>
+            {updatePlan.isError && (
+              <Text variant="caption" tone="destructive">
+                {updatePlan.error.message}
+              </Text>
+            )}
           </Stack>
         </form>
-      </Card>
+      </section>
 
-      <Card>
-        <Text variant="subheading" className="mb-3 block">
+      <Card className="glass-panel">
+        <Text variant="subheading" className="font-display mb-3 block text-xl uppercase">
           {dict.planDetail.exercisesHeading}
         </Text>
         {plan.exercises.length === 0 ? (

@@ -20,7 +20,7 @@ export default async function PlanDetailPage({ params }: PageProps<'/plans/[id]'
   if (result.status === 404) notFound();
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
+    <main className="mx-auto max-w-3xl p-6">
       <PlanDetail plan={result.body} />
     </main>
   );
