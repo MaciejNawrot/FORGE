@@ -1,6 +1,6 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
-import { PlanDetail } from '@/components/plan-detail';
+import { PlanDetail } from '@/features/plans';
 import { getServerApiClient } from '@/shared/api';
 import { getServerDictionary } from '@/shared/i18n/server';
 
