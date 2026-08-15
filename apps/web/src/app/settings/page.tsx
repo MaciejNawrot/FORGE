@@ -1,6 +1,5 @@
 import { Card, Stack, Text } from '@acme/ui';
-import { LanguageSwitcher } from '@/components/language-switcher';
-import { ThemeSwitcher } from '@/components/theme-switcher';
+import { LanguageSwitcher, ThemeSwitcher } from '@/features/settings';
 import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function SettingsPage() {
