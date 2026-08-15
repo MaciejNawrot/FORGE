@@ -236,7 +236,14 @@ export { buildCookieHeader } from './build-cookie-header';
 - [ ] **Step 4: Typecheck**
 
 Run: `pnpm --filter @acme/web typecheck`
-Expected: PASS.
+Expected: this will fail on `apps/web/src/lib/use-session.ts` — it imports `apiClient` via a **relative** path (`from './api-client'`), not the `@/lib/...` alias, so it's outside the alias grep the consumer list above was built from and isn't in the list. Once `api-client.ts` moves out of `lib/`, this relative import breaks. Fix it as part of this step:
+
+- Old (`apps/web/src/lib/use-session.ts`): `import { apiClient } from './api-client';`
+- New: `import { apiClient } from '@/shared/api';`
+
+Then re-run typecheck. Expected: PASS.
+
+(This file is not itself relocated in this task — only its import line changes. It moves to `shared/hooks/` in Task 5, which will find this import line already correct and can skip re-editing it.)
 
 - [ ] **Step 5: Run the moved test**
 
@@ -323,10 +330,7 @@ git mv lib/active-session-store.ts shared/hooks/use-active-session-store.ts
 git mv lib/active-session-store.test.ts shared/hooks/use-active-session-store.test.ts
 ```
 
-`use-session.ts` imports `import { apiClient } from './api-client';` — that file already moved to `shared/api` in Task 3. Fix this relative import:
-
-- Old: `import { apiClient } from './api-client';`
-- New: `import { apiClient } from '@/shared/api';`
+`use-session.ts` imported `apiClient` via a relative path (`from './api-client'`). Task 3 already fixed this to `import { apiClient } from '@/shared/api';` (api-client.ts moved out of `lib/` in that task, which broke this relative import immediately, so Task 3 fixed it on the spot rather than leaving it broken until now). Verify the line already reads `import { apiClient } from '@/shared/api';` — no edit needed here.
 
 The test file imports `import { isSessionExpired, useActiveSessionStore } from './active-session-store';` — update to match the rename:
 
