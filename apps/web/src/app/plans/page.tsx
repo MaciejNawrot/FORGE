@@ -1,8 +1,7 @@
 import { Stack, Text } from '@acme/ui';
 import { Library } from 'lucide-react';
 import Link from 'next/link';
-import { CreatePlanForm } from '@/components/create-plan-form';
-import { PlanListItem } from '@/components/plan-list-item';
+import { CreatePlanForm, PlanListItem } from '@/features/plans';
 import { getServerApiClient } from '@/shared/api';
 import { getServerDictionary } from '@/shared/i18n/server';
 

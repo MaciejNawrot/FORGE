@@ -1,6 +1,6 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
-import { WorkoutTemplateDetail } from '@/components/workout-template-detail';
+import { WorkoutTemplateDetail } from '@/features/plans';
 import { getServerApiClient } from '@/shared/api';
 import { getServerDictionary } from '@/shared/i18n/server';
 

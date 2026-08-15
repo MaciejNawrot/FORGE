@@ -1,5 +1,5 @@
 import { Stack, Text } from '@acme/ui';
-import { TemplateLibrary } from '@/components/template-library';
+import { TemplateLibrary } from '@/features/plans';
 import { getServerApiClient } from '@/shared/api';
 import { getServerDictionary } from '@/shared/i18n/server';
 

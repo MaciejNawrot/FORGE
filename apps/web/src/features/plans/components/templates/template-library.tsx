@@ -5,9 +5,9 @@ import { Card, Input, Text } from '@acme/ui';
 import { Dumbbell, Repeat, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ForkTemplateButton } from '@/components/fork-template-button';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
+import { ForkTemplateButton } from './fork-template-button';
 
 function CategoryPill({
   active,
