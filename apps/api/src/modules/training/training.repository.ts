@@ -166,6 +166,9 @@ export class TrainingRepository {
           eq(trainingSessionExercises.exerciseId, exerciseId),
         ),
       )
+      // Historical sessions can hold duplicate groups for one exercise (the
+      // pre-per-set flow inserted one per logged set); oldest always wins.
+      .orderBy(asc(trainingSessionExercises.createdAt), asc(trainingSessionExercises.position))
       .limit(1);
     return row;
   }
