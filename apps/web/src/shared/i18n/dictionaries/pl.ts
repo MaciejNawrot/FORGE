@@ -55,6 +55,7 @@ export const pl: Dictionary = {
     progress: 'Postępy',
     exercises: 'Ćwiczenia',
     users: 'Użytkownicy',
+    components: 'Komponenty',
     settings: 'Ustawienia',
   },
 

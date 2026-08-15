@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { ClipboardList, LogOut, Settings, User, Users } from 'lucide-react';
+import { Blocks, ClipboardList, LogOut, Settings, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { apiClient } from '@/shared/api';
@@ -17,6 +17,7 @@ import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';
 const secondaryNavLinks = [
   { href: '/exercises', labelKey: 'exercises', icon: ClipboardList },
   { href: '/users', labelKey: 'users', icon: Users },
+  { href: '/components', labelKey: 'components', icon: Blocks },
   { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
 

@@ -46,6 +46,7 @@ export const en = {
     progress: 'Progress',
     exercises: 'Exercises',
     users: 'Users',
+    components: 'Components',
     settings: 'Settings',
   },
 
