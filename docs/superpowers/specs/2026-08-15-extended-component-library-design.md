@@ -69,7 +69,7 @@ Page-local only (`apps/web/src/app/components/page.tsx`), composed from the prim
 
 ## Testing
 
-These are presentational primitives (cva variant classes, no business logic) — consistent with how `button.tsx`/`card.tsx`/`stack.tsx` have no test files today. `Stepper` and `Switch` hold local state and call an `onChange`/`onCheckedChange` callback; each gets one colocated `*.test.ts` (or `.stories.tsx`, matching `button.stories.tsx`/`card.stories.tsx`/`dialog.stories.tsx`/`table.stories.tsx` convention already in the package) verifying the callback fires with the right value on click. No new dependency for tests — existing `vitest` setup (`packages/ui/vitest.config.ts`) covers it.
+`packages/ui`'s vitest config runs in a plain `node` environment with no `@testing-library/react`/jsdom — there are no React component-render tests in this package today, only pure-function tests (`cn.test.ts`) and the file-content-scanning `portability.test.ts`. Adding a render-testing setup for two components isn't worth a new dependency; the package's actual convention for documenting/verifying interactive primitives is a colocated `.stories.tsx` (`button.stories.tsx`, `card.stories.tsx`, `dialog.stories.tsx`, `table.stories.tsx`). Every new primitive (`Badge`, `Chip`, `Switch`, `Stepper`, `SegmentedControl`, `MiniBarGraph`) and `ProgressRing` gets one, following that pattern — `Switch` and `Stepper`'s stories exercise the interactive states (checked/unchecked, value increment/decrement) so the behavior is visually verifiable in Storybook the same way the existing primitives are.
 
 ## Out of scope
 
