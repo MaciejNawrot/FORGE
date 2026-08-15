@@ -61,6 +61,7 @@ src/
         active-session-banner.tsx
         add-training-form.tsx
         start-plan-button.tsx
+        streak-banner.tsx           # sole consumer is root page.tsx; tracker-domain
         session-detail/
           index.tsx                    # SessionDetail (main)
           exercise-log-card.tsx
