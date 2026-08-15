@@ -25,6 +25,7 @@
     "@radix-ui/react-dialog": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "lucide-react": "^0.545.0",
     "tailwind-merge": "catalog:"
   },
   "peerDependencies": {

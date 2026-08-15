@@ -527,6 +527,9 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
+      lucide-react:
+        specifier: ^0.545.0
+        version: 0.545.0(react@19.2.8)
       tailwind-merge:
         specifier: 'catalog:'
         version: 3.6.0
