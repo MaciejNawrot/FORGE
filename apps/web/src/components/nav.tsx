@@ -7,8 +7,8 @@ import { usePathname } from 'next/navigation';
 import { useActiveSession, useActiveSessionStore } from '@/lib/active-session-store';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
-import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/lib/nav-links';
 import { sessionQueryKey, useSession } from '@/lib/use-session';
+import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';
 
 const secondaryNavLinks = [
   { href: '/exercises', labelKey: 'exercises', icon: ClipboardList },
