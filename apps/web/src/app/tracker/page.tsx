@@ -1,8 +1,6 @@
 import { Card, Text } from '@acme/ui';
 import { Dumbbell } from 'lucide-react';
-import { ActiveSessionBanner } from '@/components/active-session-banner';
-import { AddTrainingForm } from '@/components/add-training-form';
-import { StartPlanButton } from '@/components/start-plan-button';
+import { ActiveSessionBanner, AddTrainingForm, StartPlanButton } from '@/features/tracker';
 import { getServerApiClient } from '@/shared/api';
 import { SessionListItem, TrainingHeatmap } from '@/shared/components';
 import { getServerDictionary } from '@/shared/i18n/server';
