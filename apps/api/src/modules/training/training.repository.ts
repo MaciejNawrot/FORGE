@@ -23,9 +23,17 @@ export type TrainingSessionExerciseWithExercise = TrainingSessionExerciseRow & {
   sets: TrainingSessionSetRow[];
 };
 
+/** The pooled client or a transaction handle — both expose the same builders. */
+type DbClient = Database | Parameters<Parameters<Database['transaction']>[0]>[0];
+
 @Injectable()
 export class TrainingRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
+
+  /** Runs `fn` inside one transaction; pass `tx` on to the methods that take a client. */
+  withTransaction<T>(fn: (tx: DbClient) => Promise<T>): Promise<T> {
+    return this.db.transaction(fn);
+  }
 
   async listSessions(userId: string, from?: string, to?: string): Promise<TrainingSessionRow[]> {
     const conditions = [eq(trainingSessions.userId, userId)];
@@ -145,8 +153,8 @@ export class TrainingRepository {
   }
 
   /** Next free `position` for a new exercise group appended to the end of a session. */
-  async nextPosition(sessionId: string): Promise<number> {
-    const [row] = await this.db
+  async nextPosition(sessionId: string, dbClient: DbClient = this.db): Promise<number> {
+    const [row] = await dbClient
       .select({ value: max(trainingSessionExercises.position) })
       .from(trainingSessionExercises)
       .where(eq(trainingSessionExercises.sessionId, sessionId));
@@ -175,15 +183,16 @@ export class TrainingRepository {
 
   async createExerciseGroup(
     input: Pick<NewTrainingSessionExerciseRow, 'sessionId' | 'exerciseId' | 'position'>,
+    dbClient: DbClient = this.db,
   ): Promise<TrainingSessionExerciseRow> {
-    const [row] = await this.db.insert(trainingSessionExercises).values(input).returning();
+    const [row] = await dbClient.insert(trainingSessionExercises).values(input).returning();
     if (!row) throw new Error('Insert did not return a row');
     return row;
   }
 
   /** Next free `position` for a new set appended within one exercise group. */
-  async nextSetPosition(sessionExerciseId: string): Promise<number> {
-    const [row] = await this.db
+  async nextSetPosition(sessionExerciseId: string, dbClient: DbClient = this.db): Promise<number> {
+    const [row] = await dbClient
       .select({ value: max(trainingSessionSets.position) })
       .from(trainingSessionSets)
       .where(eq(trainingSessionSets.sessionExerciseId, sessionExerciseId));
@@ -192,8 +201,9 @@ export class TrainingRepository {
 
   async addSet(
     input: Pick<NewTrainingSessionSetRow, 'sessionExerciseId' | 'reps' | 'weightKg' | 'position'>,
+    dbClient: DbClient = this.db,
   ): Promise<TrainingSessionSetRow> {
-    const [row] = await this.db.insert(trainingSessionSets).values(input).returning();
+    const [row] = await dbClient.insert(trainingSessionSets).values(input).returning();
     if (!row) throw new Error('Insert did not return a row');
     return row;
   }
@@ -216,8 +226,12 @@ export class TrainingRepository {
     return updated.length > 0;
   }
 
-  async removeSet(setId: string, sessionExerciseId: string): Promise<boolean> {
-    const deleted = await this.db
+  async removeSet(
+    setId: string,
+    sessionExerciseId: string,
+    dbClient: DbClient = this.db,
+  ): Promise<boolean> {
+    const deleted = await dbClient
       .delete(trainingSessionSets)
       .where(
         and(
@@ -229,8 +243,11 @@ export class TrainingRepository {
     return deleted.length > 0;
   }
 
-  async hasRemainingSets(sessionExerciseId: string): Promise<boolean> {
-    const [row] = await this.db
+  async hasRemainingSets(
+    sessionExerciseId: string,
+    dbClient: DbClient = this.db,
+  ): Promise<boolean> {
+    const [row] = await dbClient
       .select({ id: trainingSessionSets.id })
       .from(trainingSessionSets)
       .where(eq(trainingSessionSets.sessionExerciseId, sessionExerciseId))
@@ -260,8 +277,12 @@ export class TrainingRepository {
     return updated.length > 0;
   }
 
-  async removeExercise(id: string, sessionId: string): Promise<boolean> {
-    const deleted = await this.db
+  async removeExercise(
+    id: string,
+    sessionId: string,
+    dbClient: DbClient = this.db,
+  ): Promise<boolean> {
+    const deleted = await dbClient
       .delete(trainingSessionExercises)
       .where(
         and(eq(trainingSessionExercises.id, id), eq(trainingSessionExercises.sessionId, sessionId)),

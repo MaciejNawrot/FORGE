@@ -55,25 +55,34 @@ export class TrainingService {
     const session = await this.trainingRepository.findSessionById(sessionId, userId);
     if (!session) return undefined;
 
-    let group = await this.trainingRepository.findGroupByExercise(sessionId, input.exerciseId);
-    if (!group) {
-      const position = await this.trainingRepository.nextPosition(sessionId);
-      group = await this.trainingRepository.createExerciseGroup({
-        sessionId,
-        exerciseId: input.exerciseId,
-        position,
-      });
-    }
+    const existing = await this.trainingRepository.findGroupByExercise(sessionId, input.exerciseId);
 
-    const setPosition = await this.trainingRepository.nextSetPosition(group.id);
-    await this.trainingRepository.addSet({
-      sessionExerciseId: group.id,
-      reps: input.reps,
-      weightKg: input.weightKg ?? null,
-      position: setPosition,
+    // One transaction so a failed set insert can't strand an empty group —
+    // a zero-set card has no add-set form, so the UI could not recover from it.
+    const groupId = await this.trainingRepository.withTransaction(async (tx) => {
+      let group = existing;
+      if (!group) {
+        const position = await this.trainingRepository.nextPosition(sessionId, tx);
+        group = await this.trainingRepository.createExerciseGroup(
+          { sessionId, exerciseId: input.exerciseId, position },
+          tx,
+        );
+      }
+
+      const setPosition = await this.trainingRepository.nextSetPosition(group.id, tx);
+      await this.trainingRepository.addSet(
+        {
+          sessionExerciseId: group.id,
+          reps: input.reps,
+          weightKg: input.weightKg ?? null,
+          position: setPosition,
+        },
+        tx,
+      );
+      return group.id;
     });
 
-    return this.trainingRepository.findSessionExerciseById(group.id, sessionId);
+    return this.trainingRepository.findSessionExerciseById(groupId, sessionId);
   }
 
   async updateSet(
@@ -105,11 +114,15 @@ export class TrainingService {
     if (!session) return false;
     const group = await this.trainingRepository.findSessionExerciseById(exerciseLogId, sessionId);
     if (!group) return false;
-    const removed = await this.trainingRepository.removeSet(setId, exerciseLogId);
-    if (!removed) return false;
-    const hasRemaining = await this.trainingRepository.hasRemainingSets(exerciseLogId);
-    if (!hasRemaining) await this.trainingRepository.removeExercise(exerciseLogId, sessionId);
-    return true;
+    // Delete + emptiness check + cascade delete must not interleave with a
+    // concurrent set insert, so they run as one transaction.
+    return this.trainingRepository.withTransaction(async (tx) => {
+      const removed = await this.trainingRepository.removeSet(setId, exerciseLogId, tx);
+      if (!removed) return false;
+      const hasRemaining = await this.trainingRepository.hasRemainingSets(exerciseLogId, tx);
+      if (!hasRemaining) await this.trainingRepository.removeExercise(exerciseLogId, sessionId, tx);
+      return true;
+    });
   }
 
   async updateExerciseNotes(

@@ -2,8 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { TrainingRepository } from './training.repository.js';
 import { TrainingService } from './training.service.js';
 
+/** Stand-in transaction handle the mocked `withTransaction` hands to the service. */
+const TX = { transaction: true };
+
 function createRepositoryMock(overrides: Partial<TrainingRepository> = {}): TrainingRepository {
   return {
+    withTransaction: vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn(TX)),
     listSessions: vi.fn(),
     findSessionById: vi.fn(),
     createSession: vi.fn(),
@@ -90,17 +94,14 @@ describe('TrainingService.addExercise', () => {
       weightKg: 50,
     });
 
-    expect(repository.createExerciseGroup).toHaveBeenCalledWith({
-      sessionId: 'session-1',
-      exerciseId: 'ex-1',
-      position: 0,
-    });
-    expect(repository.addSet).toHaveBeenCalledWith({
-      sessionExerciseId: 'group-1',
-      reps: 5,
-      weightKg: 50,
-      position: 0,
-    });
+    expect(repository.createExerciseGroup).toHaveBeenCalledWith(
+      { sessionId: 'session-1', exerciseId: 'ex-1', position: 0 },
+      TX,
+    );
+    expect(repository.addSet).toHaveBeenCalledWith(
+      { sessionExerciseId: 'group-1', reps: 5, weightKg: 50, position: 0 },
+      TX,
+    );
     expect(result).toBe(enriched);
   });
 
@@ -118,12 +119,10 @@ describe('TrainingService.addExercise', () => {
     await service.addExercise('session-1', 'user-1', { exerciseId: 'ex-1', reps: 4, weightKg: 60 });
 
     expect(repository.createExerciseGroup).not.toHaveBeenCalled();
-    expect(repository.addSet).toHaveBeenCalledWith({
-      sessionExerciseId: 'group-1',
-      reps: 4,
-      weightKg: 60,
-      position: 2,
-    });
+    expect(repository.addSet).toHaveBeenCalledWith(
+      { sessionExerciseId: 'group-1', reps: 4, weightKg: 60, position: 2 },
+      TX,
+    );
   });
 });
 
@@ -208,7 +207,7 @@ describe('TrainingService.removeSet', () => {
     const result = await service.removeSet('session-1', 'group-1', 'set-1', 'user-1');
 
     expect(result).toBe(true);
-    expect(repository.removeExercise).toHaveBeenCalledWith('group-1', 'session-1');
+    expect(repository.removeExercise).toHaveBeenCalledWith('group-1', 'session-1', TX);
   });
 
   it('leaves the group alone when other sets remain', async () => {
