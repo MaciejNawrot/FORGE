@@ -72,7 +72,7 @@ git commit -m "chore(web): add features/shared/utils path aliases"
 **Files:**
 - Create (via `git mv`): `apps/web/src/utils/theme.ts`, `apps/web/src/utils/training-colors.ts`, `apps/web/src/utils/nav-links.ts`
 - Create: `apps/web/src/utils/index.ts`
-- Modify (import path only): `apps/web/src/app/layout.tsx`, `apps/web/src/app/page.tsx`, `apps/web/src/app/progress/page.tsx`, `apps/web/src/app/tracker/page.tsx`, `apps/web/src/components/theme-switcher.tsx`, `apps/web/src/components/add-training-form.tsx`, `apps/web/src/components/start-plan-button.tsx`, `apps/web/src/components/session-list-item.tsx`, `apps/web/src/components/training-heatmap.tsx`, `apps/web/src/components/plan-list-item.tsx`, `apps/web/src/components/template-library.tsx`, `apps/web/src/components/workout-template-detail.tsx`, `apps/web/src/components/session-detail.tsx`
+- Modify (import path only): `apps/web/src/app/layout.tsx`, `apps/web/src/app/page.tsx`, `apps/web/src/app/progress/page.tsx`, `apps/web/src/app/tracker/page.tsx`, `apps/web/src/components/theme-switcher.tsx`, `apps/web/src/components/add-training-form.tsx`, `apps/web/src/components/start-plan-button.tsx`, `apps/web/src/components/session-list-item.tsx`, `apps/web/src/components/training-heatmap.tsx`, `apps/web/src/components/plan-list-item.tsx`, `apps/web/src/components/template-library.tsx`, `apps/web/src/components/workout-template-detail.tsx`, `apps/web/src/components/session-detail.tsx`, `apps/web/src/components/nav.tsx`, `apps/web/src/components/bottom-nav.tsx`
 
 **Interfaces:**
 - Consumes: nothing new.
@@ -155,6 +155,14 @@ In each file below, replace the old import with the new one (leave every other i
 `components/session-detail.tsx`:
 - Old: `import { trainingTypeStyles } from '@/lib/training-colors';`
 - New: `import { trainingTypeStyles } from '@/utils';`
+
+`components/nav.tsx`:
+- Old: `import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/lib/nav-links';`
+- New: `import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';`
+
+`components/bottom-nav.tsx`:
+- Old: `import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/lib/nav-links';`
+- New: `import { isNavLinkActive, navLinkHref, primaryNavLinks } from '@/utils';`
 
 - [ ] **Step 4: Typecheck**
 
