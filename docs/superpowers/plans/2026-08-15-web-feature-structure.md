@@ -882,6 +882,15 @@ git mv lib/plan-progress.test.ts features/tracker/lib/plan-progress.test.ts
 
 The `.test.ts` files import their subject with a relative path (`./muscle-fatigue`, `./plan-progress`) — moved alongside their subject, no edit needed.
 
+`components/session-detail.tsx` (untouched until Task 14) imports both by absolute path — `import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';` and `import { prefillFrom, unloggedPlanExercises } from '@/lib/plan-progress';`. Once the `git mv`s above run, `lib/` no longer contains these files and those two imports break. Fix them now, in place, without touching anything else in `session-detail.tsx`:
+
+- Old: `import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';`
+- New: `import { alreadyTrainedGroups } from '@/features/tracker/lib/muscle-fatigue';`
+- Old: `import { prefillFrom, unloggedPlanExercises } from '@/lib/plan-progress';`
+- New: `import { prefillFrom, unloggedPlanExercises } from '@/features/tracker/lib/plan-progress';`
+
+This is a temporary reach-through import into the feature's own internal `lib/` (not via the barrel, since these two have no outside consumer and stay unexported) — it's replaced entirely in Task 14, which deletes `session-detail.tsx` and recreates its logic from scratch across several new files with correct relative imports. Task 14's instructions do not depend on this file's current import lines, so no further coordination is needed.
+
 - [ ] **Step 2: Create the barrel**
 
 Create `apps/web/src/features/tracker/index.ts`:
