@@ -2,7 +2,7 @@
 
 import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeId, themes } from '@/lib/theme';
+import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeId, themes } from '@/utils';
 
 export function ThemeSwitcher() {
   const [active, setActive] = useState<ThemeId>(DEFAULT_THEME);

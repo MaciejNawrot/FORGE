@@ -4,7 +4,7 @@ import { BottomNav } from '@/components/bottom-nav';
 import { Nav } from '@/components/nav';
 import { LocaleProvider } from '@/lib/i18n/context';
 import { getServerLocale } from '@/lib/i18n/server';
-import { noFlashThemeScript } from '@/lib/theme';
+import { noFlashThemeScript } from '@/utils';
 import './globals.css';
 import { Providers } from './providers';
 

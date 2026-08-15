@@ -7,7 +7,7 @@ import { Dumbbell, ListOrdered, Play, Repeat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
-import { trainingTypeStyles } from '@/lib/training-colors';
+import { trainingTypeStyles } from '@/utils';
 
 interface WorkoutTemplateDetailProps {
   readonly template: WorkoutPlanWithExercises;

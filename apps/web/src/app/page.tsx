@@ -5,7 +5,7 @@ import { SessionListItem } from '@/components/session-list-item';
 import { StreakBanner } from '@/components/streak-banner';
 import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
-import { toLocalIsoDate } from '@/lib/training-colors';
+import { toLocalIsoDate } from '@/utils';
 
 export default async function Home() {
   const dict = await getServerDictionary();

@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { ConfirmButton } from '@/components/confirm-button';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
-import { trainingTypeStyles } from '@/lib/training-colors';
+import { trainingTypeStyles } from '@/utils';
 
 export function PlanListItem({ plan }: { plan: WorkoutPlanListItem }) {
   const router = useRouter();

@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
-import { toLocalIsoDate } from '@/lib/training-colors';
+import { toLocalIsoDate } from '@/utils';
 
 export function StartPlanButton({
   planId,

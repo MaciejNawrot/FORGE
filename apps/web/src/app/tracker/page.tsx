@@ -7,7 +7,7 @@ import { StartPlanButton } from '@/components/start-plan-button';
 import { TrainingHeatmap } from '@/components/training-heatmap';
 import { getServerApiClient } from '@/lib/api-server';
 import { getServerDictionary } from '@/lib/i18n/server';
-import { toLocalIsoDate, trainingTypeStyles } from '@/lib/training-colors';
+import { toLocalIsoDate, trainingTypeStyles } from '@/utils';
 
 export default async function TrackerPage() {
   const dict = await getServerDictionary();

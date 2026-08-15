@@ -19,7 +19,7 @@ import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
 import { alreadyTrainedGroups } from '@/lib/muscle-fatigue';
 import { prefillFrom, unloggedPlanExercises } from '@/lib/plan-progress';
-import { trainingTypeStyles } from '@/lib/training-colors';
+import { trainingTypeStyles } from '@/utils';
 
 const REST_SECONDS = 90;
 

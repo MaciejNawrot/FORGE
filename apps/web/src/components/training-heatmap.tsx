@@ -2,7 +2,7 @@
 
 import type { TrainingSession } from '@acme/contracts';
 import { useLocale } from '@/lib/i18n/context';
-import { toLocalIsoDate, trainingTypeStyles, trainingTypes } from '@/lib/training-colors';
+import { toLocalIsoDate, trainingTypeStyles, trainingTypes } from '@/utils';
 
 type Day = { date: string; sessions: TrainingSession[] };
 

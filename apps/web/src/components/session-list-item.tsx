@@ -4,7 +4,7 @@ import type { TrainingSession } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import Link from 'next/link';
 import { useLocale } from '@/lib/i18n/context';
-import { trainingTypeStyles } from '@/lib/training-colors';
+import { trainingTypeStyles } from '@/utils';
 
 export function SessionListItem({ session }: { session: TrainingSession }) {
   const { dict } = useLocale();

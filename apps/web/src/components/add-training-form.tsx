@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { apiClient } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/context';
-import { toLocalIsoDate, trainingTypes } from '@/lib/training-colors';
+import { toLocalIsoDate, trainingTypes } from '@/utils';
 
 type FormValues = z.infer<typeof createTrainingSessionInputSchema>;
 

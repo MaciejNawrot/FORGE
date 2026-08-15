@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ForkTemplateButton } from '@/components/fork-template-button';
 import { useLocale } from '@/lib/i18n/context';
-import { trainingTypeStyles } from '@/lib/training-colors';
+import { trainingTypeStyles } from '@/utils';
 
 function CategoryPill({
   active,
