@@ -1043,10 +1043,10 @@ import { prefillFrom, unloggedPlanExercises } from '../../lib/plan-progress';
 import { trainingTypeStyles } from '@/utils';
 import { AddSessionExerciseCard } from './add-session-exercise-card';
 import { ExerciseLogCard } from './exercise-log-card';
-import { formatDuration, useElapsedTime } from './use-timers';
+import { formatDuration, useCountdown, useElapsedTime } from './use-timers';
 ```
 
-`SessionDetail` itself keeps `export function SessionDetail(...)` exactly as it reads today — no signature change. Note it no longer needs `useEffect` (that stayed in `use-timers.ts`), so don't import it here.
+`SessionDetail` itself keeps `export function SessionDetail(...)` exactly as it reads today — no signature change. Note it no longer needs `useEffect` (that stayed in `use-timers.ts`), so don't import it here. (This import block was missing `useCountdown` in an earlier draft, even though `SessionDetail` calls `useCountdown(resting, restSeconds)` for the rest timer — without it the file doesn't compile. Corrected above.)
 
 - [ ] **Step 7: Delete the original file**
 
