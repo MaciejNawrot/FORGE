@@ -3,6 +3,7 @@ export * from './button';
 export * from './card';
 export * from './chip';
 export * from './input';
+export * from './segmented-control';
 export * from './stack';
 export * from './stepper';
 export * from './switch';
