@@ -1,4 +1,4 @@
-import { Card, Text } from '@acme/ui';
+import { Badge, Card, Text } from '@acme/ui';
 import { Dumbbell } from 'lucide-react';
 import { ActiveSessionBanner, AddTrainingForm, StartPlanButton } from '@/features/tracker';
 import { getServerApiClient } from '@/shared/api/api-server';
@@ -64,9 +64,9 @@ export default async function TrackerPage() {
                         <Text className="truncate font-medium">{plan.name}</Text>
                         <div className="text-muted-foreground font-data flex items-center gap-2 text-xs">
                           {style && plan.category && (
-                            <span className={`rounded-full px-2 py-0.5 uppercase ${style.badge}`}>
+                            <Badge className={style.badge}>
                               {dict.trainingType[plan.category]}
-                            </span>
+                            </Badge>
                           )}
                           <span className="flex items-center gap-1">
                             <Dumbbell className="h-3.5 w-3.5" aria-hidden="true" />

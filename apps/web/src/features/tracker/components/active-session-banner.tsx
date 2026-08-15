@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, Text } from '@acme/ui';
+import { Button, Card, Text } from '@acme/ui';
 import Link from 'next/link';
 import { useActiveSession } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
@@ -14,11 +14,8 @@ export function ActiveSessionBanner() {
   return (
     <Card className="glass-panel border-primary flex items-center justify-between gap-3 border">
       <Text className="font-medium">{dict.tracker.activeSessionMessage}</Text>
-      <Link
-        href={`/tracker/${activeSession.sessionId}`}
-        className="bg-primary text-primary-foreground font-data rounded-full px-4 py-2 text-xs uppercase transition-colors active:scale-95"
-      >
-        {dict.tracker.continue}
+      <Link href={`/tracker/${activeSession.sessionId}`}>
+        <Button size="sm">{dict.tracker.continue}</Button>
       </Link>
     </Card>
   );
