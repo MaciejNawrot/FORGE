@@ -1,7 +1,7 @@
 import { Text } from '@acme/ui';
 import { notFound } from 'next/navigation';
 import { WorkoutTemplateDetail } from '@/features/plans';
-import { getServerApiClient } from '@/shared/api';
+import { getServerApiClient } from '@/shared/api/api-server';
 import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function TemplateDetailPage({ params }: PageProps<'/plans/templates/[id]'>) {

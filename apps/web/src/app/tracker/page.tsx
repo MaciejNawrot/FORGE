@@ -1,7 +1,7 @@
 import { Card, Text } from '@acme/ui';
 import { Dumbbell } from 'lucide-react';
 import { ActiveSessionBanner, AddTrainingForm, StartPlanButton } from '@/features/tracker';
-import { getServerApiClient } from '@/shared/api';
+import { getServerApiClient } from '@/shared/api/api-server';
 import { SessionListItem, TrainingHeatmap } from '@/shared/components';
 import { getServerDictionary } from '@/shared/i18n/server';
 import { toLocalIsoDate, trainingTypeStyles } from '@/utils';

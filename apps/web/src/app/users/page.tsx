@@ -1,7 +1,7 @@
 import { Card, Stack, Text } from '@acme/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@acme/ui/web';
 import { CreateUserForm } from '@/features/users';
-import { getServerApiClient } from '@/shared/api';
+import { getServerApiClient } from '@/shared/api/api-server';
 import { getServerDictionary } from '@/shared/i18n/server';
 
 export default async function UsersPage() {
