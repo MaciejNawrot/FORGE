@@ -562,6 +562,11 @@ function ExerciseLogCard({
   });
 
   const lastSet = exercise.sets[exercise.sets.length - 1];
+  // These edits close their input on commit, so a failed save is otherwise
+  // invisible — surface whichever one is currently erroring.
+  const mutationError = [updateNotes, updateRest, updateSet, removeSet, removeExercise].find(
+    (mutation) => mutation.isError,
+  )?.error;
 
   return (
     <Card className="glass-panel flex flex-col gap-3">
@@ -657,7 +662,8 @@ function ExerciseLogCard({
               <EditableNumber
                 value={set.reps}
                 onCommit={(value) => {
-                  if (value != null) {
+                  // The API rejects reps < 1; ignore those like an empty commit.
+                  if (value != null && value >= 1) {
                     updateSet.mutate({ setId: set.id, reps: value, weightKg: set.weightKg });
                   }
                 }}
@@ -687,12 +693,21 @@ function ExerciseLogCard({
 
       {lastSet && (
         <AddSetForm
+          // AddSetForm seeds its inputs once on mount; remount it whenever the
+          // last set changes (added, deleted, or inline-edited) to re-seed.
+          key={`${lastSet.id}:${lastSet.reps}:${lastSet.weightKg}`}
           sessionId={sessionId}
           exerciseId={exercise.exercise.id}
           lastReps={lastSet.reps}
           lastWeightKg={lastSet.weightKg}
           onLogged={onSetLogged}
         />
+      )}
+
+      {mutationError && (
+        <Text variant="caption" tone="destructive">
+          {mutationError.message}
+        </Text>
       )}
     </Card>
   );
@@ -760,18 +775,25 @@ function AddSetForm({
   });
 
   return (
-    <div className="flex items-center gap-2">
-      <CompactNumberInput value={reps} onChange={(v) => setReps(Number(v))} />
-      <span className="text-muted-foreground font-data text-sm">×</span>
-      <CompactNumberInput value={weightKg} onChange={setWeightKg} step="0.5" suffix="kg" />
-      <button
-        type="button"
-        disabled={addSet.isPending}
-        onClick={() => addSet.mutate()}
-        className="bg-primary text-primary-foreground font-data shrink-0 rounded-lg px-3 py-2 text-xs uppercase disabled:opacity-50"
-      >
-        {addSet.isPending ? dict.common.logging : dict.activeTracking.logSet}
-      </button>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <CompactNumberInput value={reps} onChange={(v) => setReps(Number(v))} />
+        <span className="text-muted-foreground font-data text-sm">×</span>
+        <CompactNumberInput value={weightKg} onChange={setWeightKg} step="0.5" suffix="kg" />
+        <button
+          type="button"
+          disabled={addSet.isPending}
+          onClick={() => addSet.mutate()}
+          className="bg-primary text-primary-foreground font-data shrink-0 rounded-lg px-3 py-2 text-xs uppercase disabled:opacity-50"
+        >
+          {addSet.isPending ? dict.common.logging : dict.activeTracking.logSet}
+        </button>
+      </div>
+      {addSet.isError && (
+        <Text variant="caption" tone="destructive">
+          {addSet.error.message}
+        </Text>
+      )}
     </div>
   );
 }
