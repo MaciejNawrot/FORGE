@@ -234,8 +234,14 @@ export function ExerciseLogCard({
           </div>
         ))}
         {Array.from({ length: placeholderCount }).map((_, i) => (
+          // Keyed on loggedSets.length too so every placeholder remounts
+          // fresh whenever any set (in any order) gets logged for this
+          // exercise — otherwise React reuses a placeholder's DOM node (and
+          // its checkbox's checked state) for a different logical row once
+          // the array shrinks, and stale prefill values stick around instead
+          // of picking up the just-logged set as the new carry-forward.
           <PlannedSetRow
-            key={`placeholder-${i}`}
+            key={`placeholder-${loggedSets.length}-${i}`}
             sessionId={sessionId}
             exerciseId={catalogExercise.id}
             index={loggedSets.length + i + 1}
