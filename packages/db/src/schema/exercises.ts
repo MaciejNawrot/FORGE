@@ -7,6 +7,10 @@ export const exercises = pgTable('exercises', {
   muscleGroups: text('muscle_groups').array().notNull(),
   equipment: text('equipment').notNull(),
   description: text('description').notNull(),
+  instructions: text('instructions'),
+  commonMistakes: text('common_mistakes'),
+  setupNotes: text('setup_notes'),
+  videoUrl: text('video_url'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

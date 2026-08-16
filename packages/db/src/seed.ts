@@ -16,6 +16,13 @@ const exerciseCatalog = [
     muscleGroups: ['chest', 'triceps', 'shoulders'],
     equipment: 'barbell',
     description: 'Bar to mid-chest, elbows ~45°.',
+    instructions:
+      'Lie back on the bench with eyes under the bar. Grip just outside shoulder width, retract your shoulder blades, and plant your feet flat on the floor. Unrack the bar over your shoulders, lower it under control to mid-chest, then drive it back up in a straight line without losing shoulder blade contact with the bench.',
+    commonMistakes:
+      'Flaring elbows to 90°, bouncing the bar off the chest, letting the hips rise off the bench, and losing shoulder blade retraction partway through the set.',
+    setupNotes:
+      'Shoulder blades pulled back and down, slight arch in the lower back, feet planted firmly, bar path starts directly over the shoulders.',
+    videoUrl: 'https://www.youtube.com/results?search_query=barbell+bench+press+form+tutorial',
   },
   {
     name: 'Dumbbell Incline Press',
@@ -34,6 +41,13 @@ const exerciseCatalog = [
     muscleGroups: ['back', 'glutes', 'hamstrings'],
     equipment: 'barbell',
     description: 'Bar over midfoot, hinge at hips.',
+    instructions:
+      'Stand with the bar over midfoot, feet hip-width apart. Hinge at the hips and bend your knees to grip the bar just outside your shins. Brace your core, flatten your back, and drive through the floor with your legs while keeping the bar close to your body until you stand tall with hips fully extended.',
+    commonMistakes:
+      'Rounding the lower back, letting the bar drift away from the shins, hyperextending the lower back at lockout, and jerking the bar off the floor instead of driving with the legs.',
+    setupNotes:
+      'Bar over midfoot, shins near-vertical, flat back, hips higher than knees but lower than shoulders at the start.',
+    videoUrl: 'https://www.youtube.com/results?search_query=deadlift+form+tutorial',
   },
   {
     name: 'Lat Pulldown',
@@ -52,6 +66,13 @@ const exerciseCatalog = [
     muscleGroups: ['quads', 'glutes', 'hamstrings'],
     equipment: 'barbell',
     description: 'Hips below knees, knees track toes.',
+    instructions:
+      'Set the bar on your upper traps, unrack, and step back with feet shoulder-width apart, toes slightly turned out. Brace your core, break at the hips and knees together, and descend until your hip crease drops below your knee. Drive up through the whole foot, keeping your chest up and knees tracking over your toes.',
+    commonMistakes:
+      'Knees caving inward, heels rising off the floor, leaning too far forward, and stopping the descent above parallel.',
+    setupNotes:
+      'Bar resting on the upper traps (not the neck), feet shoulder-width, core braced before the first inch of descent.',
+    videoUrl: 'https://www.youtube.com/results?search_query=back+squat+form+tutorial',
   },
   {
     name: 'Leg Press',
