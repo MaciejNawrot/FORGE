@@ -1,0 +1,42 @@
+# Deploy context is the repo root (Dockerfile.api COPYs the whole workspace):
+#   flyctl deploy --config infra/fly/api.toml
+# run from the repo root, not from infra/fly/.
+
+app = "gym0-api"
+primary_region = "waw" # change to whatever region is closest to your users
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[build]
+  dockerfile = "infra/docker/Dockerfile.api"
+
+# Non-secret only. DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL,
+# CORS_ORIGIN, BETTER_AUTH_TRUSTED_ORIGINS go in `fly secrets set` instead —
+# this file is committed to git.
+[env]
+  NODE_ENV = "production"
+  PORT = "3001"
+  HOST = "0.0.0.0"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  # >=1 keeps a machine warm so the first request after a quiet period isn't
+  # a cold start. Drop to 0 later if idle cost matters more than latency.
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

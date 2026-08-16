@@ -100,3 +100,31 @@ jobs:
       - uses: ./.github/actions/setup
 
       - run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+
+  deploy-api:
+    name: Deploy API to Fly
+    needs: [ci, e2e, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # One deploy at a time; a second push landing mid-rollout waits instead
+    # of racing the first (no queue drop, unlike ci's cancel-in-progress).
+    concurrency:
+      group: deploy-api-production
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+
+      # Runs from the full monorepo checkout (not the prod image, which has
+      # no devDependencies) against the real prod database, before the new
+      # image is live. See infra/fly/README.md for the required secret.
+      - name: Apply migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        run: flyctl deploy --config infra/fly/api.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
