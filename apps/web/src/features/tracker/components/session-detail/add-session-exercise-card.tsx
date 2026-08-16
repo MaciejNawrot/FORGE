@@ -5,6 +5,7 @@ import type {
 } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { apiClient } from '@/shared/api';
 import { ExercisePicker } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
@@ -14,25 +15,16 @@ import { BigNumberInput } from './number-inputs';
 export function AddSessionExerciseCard({
   sessionId,
   loggedExercises,
-  selected,
-  onSelect,
-  reps,
-  onRepsChange,
-  weightKg,
-  onWeightKgChange,
   onSetLogged,
 }: {
   sessionId: string;
   loggedExercises: TrainingSessionWithExercises['exercises'];
-  selected: Exercise | null;
-  onSelect: (exercise: Exercise | null) => void;
-  reps: number;
-  onRepsChange: (value: number) => void;
-  weightKg: string;
-  onWeightKgChange: (value: string) => void;
   onSetLogged: (loggedExercise: { id: string; restSeconds: number | null }) => void;
 }) {
   const { dict } = useLocale();
+  const [selected, setSelected] = useState<Exercise | null>(null);
+  const [reps, setReps] = useState(10);
+  const [weightKg, setWeightKg] = useState('');
 
   const { data: lastPerformance } = useQuery({
     queryKey: ['last-performance', selected?.id],
@@ -67,9 +59,9 @@ export function AddSessionExerciseCard({
     },
     onSuccess: (group) => {
       const priorRestSeconds = lastPerformance?.restSeconds ?? null;
-      onSelect(null);
-      onRepsChange(10);
-      onWeightKgChange('');
+      setSelected(null);
+      setReps(10);
+      setWeightKg('');
       onSetLogged({ id: group.id, restSeconds: group.restSeconds ?? priorRestSeconds });
     },
   });
@@ -102,7 +94,7 @@ export function AddSessionExerciseCard({
           </div>
           <button
             type="button"
-            onClick={() => onSelect(null)}
+            onClick={() => setSelected(null)}
             className="font-data text-muted-foreground hover:text-primary text-xs uppercase"
           >
             {dict.common.change}
@@ -110,20 +102,20 @@ export function AddSessionExerciseCard({
         </div>
       )}
       {!selected ? (
-        <ExercisePicker onSelect={onSelect} />
+        <ExercisePicker onSelect={setSelected} />
       ) : (
         <Stack gap="sm">
           <div className="grid grid-cols-2 gap-3">
             <BigNumberInput
               label={dict.common.reps}
               value={reps}
-              onChange={(v) => onRepsChange(Number(v))}
+              onChange={(v) => setReps(Number(v))}
             />
             <BigNumberInput
               label={dict.common.weightKg}
               value={weightKg}
               step="0.5"
-              onChange={onWeightKgChange}
+              onChange={setWeightKg}
             />
           </div>
           <button
