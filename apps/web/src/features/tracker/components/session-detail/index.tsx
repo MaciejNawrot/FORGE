@@ -1,10 +1,6 @@
 'use client';
 
-import type {
-  Exercise,
-  TrainingSessionWithExercises,
-  WorkoutPlanWithExercises,
-} from '@acme/contracts';
+import type { TrainingSessionWithExercises, WorkoutPlanWithExercises } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
@@ -16,7 +12,7 @@ import { ConfirmButton } from '@/shared/components';
 import { useActiveSession, useActiveSessionStore } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
-import { prefillFrom, unloggedPlanExercises } from '../../lib/plan-progress';
+import { buildExerciseRows } from '../../lib/plan-progress';
 import { AddSessionExerciseCard } from './add-session-exercise-card';
 import { ExerciseLogCard } from './exercise-log-card';
 import { formatDuration } from './format-duration';
@@ -79,15 +75,11 @@ export function SessionDetail({
   const [restSeconds, setRestSeconds] = useState(REST_SECONDS);
   const [restExerciseLogId, setRestExerciseLogId] = useState<string | null>(null);
   const rest = useCountdown(resting, restSeconds);
-  const [selected, setSelected] = useState<Exercise | null>(null);
-  const [reps, setReps] = useState(10);
-  const [weightKg, setWeightKg] = useState('');
 
-  const notYetLogged = plan ? unloggedPlanExercises(plan.exercises, session.exercises) : [];
   const planExerciseIds = plan?.exercises.map((exercise) => exercise.exercise.id) ?? [];
 
-  const { data: suggestedLastPerformance } = useQuery({
-    queryKey: ['last-performance', 'suggested', plan?.id],
+  const { data: lastPerformance } = useQuery({
+    queryKey: ['last-performance', 'plan', plan?.id],
     queryFn: async () => {
       const result = await apiClient.training.lastPerformance({
         query: { exerciseIds: planExerciseIds.join(',') },
@@ -96,6 +88,8 @@ export function SessionDetail({
     },
     enabled: planExerciseIds.length > 0,
   });
+
+  const rows = buildExerciseRows(plan, session.exercises, lastPerformance);
 
   const removeSession = useMutation({
     mutationFn: async () => {
@@ -209,64 +203,7 @@ export function SessionDetail({
         </Card>
       )}
 
-      {notYetLogged.length > 0 && (
-        <Card className="glass-panel">
-          <Text
-            tone="muted"
-            variant="caption"
-            className="font-data mb-3 block tracking-widest uppercase"
-          >
-            {dict.activeTracking.suggestedNext}
-          </Text>
-          <Stack gap="sm">
-            {notYetLogged.map((planExercise) => {
-              const last = suggestedLastPerformance?.find(
-                (entry) => entry.exerciseId === planExercise.exercise.id,
-              );
-              return (
-                <button
-                  key={planExercise.id}
-                  type="button"
-                  onClick={() => {
-                    setSelected(planExercise.exercise);
-                    const prefill = prefillFrom(planExercise, last);
-                    setReps(prefill.reps);
-                    setWeightKg(prefill.weightKg);
-                  }}
-                  className="bg-muted hover:bg-accent flex w-full items-center justify-between gap-3 rounded-lg p-3 text-left transition-colors"
-                >
-                  <div className="flex flex-col">
-                    <Text className="font-medium">{planExercise.exercise.name}</Text>
-                    <Text tone="muted" variant="caption" className="font-data">
-                      {last
-                        ? dict.activeTracking.lastTime(last.weightKg, last.reps, last.date)
-                        : dict.sessionDetail.exerciseLine(
-                            planExercise.weightKg,
-                            planExercise.reps,
-                            planExercise.sets,
-                          )}
-                    </Text>
-                  </div>
-                </button>
-              );
-            })}
-          </Stack>
-        </Card>
-      )}
-
-      <AddSessionExerciseCard
-        sessionId={session.id}
-        loggedExercises={session.exercises}
-        selected={selected}
-        onSelect={setSelected}
-        reps={reps}
-        onRepsChange={setReps}
-        weightKg={weightKg}
-        onWeightKgChange={setWeightKg}
-        onSetLogged={handleSetLogged}
-      />
-
-      {session.exercises.length === 0 ? (
+      {rows.length === 0 ? (
         <Card className="glass-panel">
           <Text tone="muted">{dict.sessionDetail.noSets}</Text>
         </Card>
@@ -275,17 +212,23 @@ export function SessionDetail({
           <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
             {dict.activeTracking.loggedExercises}
           </Text>
-          {session.exercises.map((exercise) => (
+          {rows.map((row) => (
             <ExerciseLogCard
-              key={exercise.id}
+              key={row.key}
               sessionId={session.id}
-              exercise={exercise}
+              row={row}
               onSetLogged={handleSetLogged}
               onChanged={() => router.refresh()}
             />
           ))}
         </Stack>
       )}
+
+      <AddSessionExerciseCard
+        sessionId={session.id}
+        loggedExercises={session.exercises}
+        onSetLogged={handleSetLogged}
+      />
 
       {(resting || isThisSessionActive) && (
         <div className="glass-panel fixed inset-x-4 bottom-[76px] z-40 flex items-center justify-between gap-3 rounded-full p-2 md:right-6 md:bottom-24 md:left-auto md:w-auto">
