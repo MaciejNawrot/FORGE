@@ -16,4 +16,10 @@ describe('contract', () => {
     expect(contract.auth.register.path).toBe('/auth/register');
     expect(contract.auth.session.method).toBe('GET');
   });
+
+  it('exposes the exercises routes', () => {
+    expect(contract.exercises.listExercises.path).toBe('/exercises');
+    expect(contract.exercises.getExercise.method).toBe('GET');
+    expect(contract.exercises.getExercise.path).toBe('/exercises/:id');
+  });
 });
