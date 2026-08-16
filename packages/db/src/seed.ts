@@ -1,5 +1,5 @@
 import './load-env.js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { env } from './env.js';
@@ -447,7 +447,15 @@ async function main() {
         muscleGroups: [...exercise.muscleGroups],
       })),
     )
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: exercises.name,
+      set: {
+        instructions: sql`excluded.instructions`,
+        commonMistakes: sql`excluded.common_mistakes`,
+        setupNotes: sql`excluded.setup_notes`,
+        videoUrl: sql`excluded.video_url`,
+      },
+    });
 
   const catalogRows = await db.select({ id: exercises.id, name: exercises.name }).from(exercises);
   const exerciseIdByName = new Map(catalogRows.map((row) => [row.name.toLowerCase(), row.id]));

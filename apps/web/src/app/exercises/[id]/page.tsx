@@ -9,7 +9,7 @@ export default async function ExerciseDetailPage({ params }: PageProps<'/exercis
   const apiClient = await getServerApiClient();
   const result = await apiClient.exercises.getExercise({ params: { id } });
 
-  if (result.status === 404) notFound();
+  if (result.status !== 200) notFound();
 
   return (
     <main className="mx-auto max-w-2xl p-6">
