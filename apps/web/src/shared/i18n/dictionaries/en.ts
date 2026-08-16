@@ -93,6 +93,14 @@ export const en = {
     removeExerciseDescription: (name: string) => `"${name}" will be removed from this plan.`,
   },
 
+  planAnalytics: {
+    heading: 'Plan Analytics',
+    noSessions: 'Log a session from this plan to see analytics here.',
+    totalVolume: 'Total Volume',
+    sessions: 'Sessions',
+    avgDuration: 'Avg Duration',
+  },
+
   templates: {
     loginRequired: 'Log in to browse plan templates.',
     title: 'Workout Library',

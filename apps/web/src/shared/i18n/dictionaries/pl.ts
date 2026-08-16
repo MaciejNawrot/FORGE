@@ -102,6 +102,14 @@ export const pl: Dictionary = {
     removeExerciseDescription: (name: string) => `„${name}” zostanie usunięte z tego planu.`,
   },
 
+  planAnalytics: {
+    heading: 'Analiza planu',
+    noSessions: 'Zaloguj trening z tego planu, aby zobaczyć tu analizy.',
+    totalVolume: 'Łączna objętość',
+    sessions: 'Treningi',
+    avgDuration: 'Śr. czas trwania',
+  },
+
   templates: {
     loginRequired: 'Zaloguj się, aby przeglądać szablony planów.',
     title: 'Biblioteka treningów',
