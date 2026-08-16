@@ -19,7 +19,8 @@ import { trainingTypeStyles } from '@/utils';
 import { prefillFrom, unloggedPlanExercises } from '../../lib/plan-progress';
 import { AddSessionExerciseCard } from './add-session-exercise-card';
 import { ExerciseLogCard } from './exercise-log-card';
-import { formatDuration, useCountdown, useElapsedTime } from './use-timers';
+import { formatDuration } from './format-duration';
+import { useCountdown, useElapsedTime } from './use-timers';
 
 const REST_SECONDS = 90;
 

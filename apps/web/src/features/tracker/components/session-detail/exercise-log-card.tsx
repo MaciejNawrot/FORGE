@@ -7,8 +7,8 @@ import { apiClient } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import { AddSetForm } from './add-set-form';
+import { formatDuration } from './format-duration';
 import { EditableNumber } from './number-inputs';
-import { formatDuration } from './use-timers';
 
 export function ExerciseLogCard({
   sessionId,

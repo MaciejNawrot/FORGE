@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 export function useElapsedTime(since: number | null): string {
@@ -14,12 +16,6 @@ export function useElapsedTime(since: number | null): string {
   const elapsed = Math.max(0, Math.floor((now - since) / 1000));
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
-}
-
-export function formatDuration(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
