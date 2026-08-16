@@ -218,6 +218,11 @@ export const en = {
 
   exercises: {
     title: 'Exercise Library',
+    viewDetails: 'View exercise details',
+    howToPerform: 'How to perform it',
+    commonMistakes: 'Common mistakes',
+    setupPosition: 'Setup & position',
+    watchDemo: 'Watch a demo',
   },
 
   login: {

@@ -229,6 +229,11 @@ export const pl: Dictionary = {
 
   exercises: {
     title: 'Biblioteka ćwiczeń',
+    viewDetails: 'Zobacz szczegóły ćwiczenia',
+    howToPerform: 'Jak wykonać poprawnie',
+    commonMistakes: 'Częste błędy',
+    setupPosition: 'Pozycja wyjściowa',
+    watchDemo: 'Obejrzyj film instruktażowy',
   },
 
   login: {
