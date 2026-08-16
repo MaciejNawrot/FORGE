@@ -16,6 +16,11 @@ export class ExercisesController {
         const items = await this.exercisesService.list(query.search);
         return { status: 200, body: items };
       },
+      getExercise: async ({ params }) => {
+        const exercise = await this.exercisesService.getExercise(params.id);
+        if (!exercise) return { status: 404, body: { message: 'Exercise not found' } };
+        return { status: 200, body: exercise };
+      },
     });
   }
 }

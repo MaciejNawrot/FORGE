@@ -9,4 +9,8 @@ export class ExercisesService {
   async list(search?: string): Promise<Exercise[]> {
     return this.exercisesRepository.list(search);
   }
+
+  async getExercise(id: string): Promise<Exercise | undefined> {
+    return this.exercisesRepository.findById(id);
+  }
 }
