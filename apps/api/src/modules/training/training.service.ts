@@ -13,8 +13,13 @@ import { TrainingRepository } from './training.repository.js';
 export class TrainingService {
   constructor(private readonly trainingRepository: TrainingRepository) {}
 
-  async listSessions(userId: string, from?: string, to?: string): Promise<TrainingSession[]> {
-    return this.trainingRepository.listSessions(userId, from, to);
+  async listSessions(
+    userId: string,
+    from?: string,
+    to?: string,
+    planId?: string,
+  ): Promise<TrainingSession[]> {
+    return this.trainingRepository.listSessions(userId, from, to, planId);
   }
 
   async getSession(id: string, userId: string): Promise<TrainingSessionWithExercises | undefined> {

@@ -35,10 +35,16 @@ export class TrainingRepository {
     return this.db.transaction(fn);
   }
 
-  async listSessions(userId: string, from?: string, to?: string): Promise<TrainingSessionRow[]> {
+  async listSessions(
+    userId: string,
+    from?: string,
+    to?: string,
+    planId?: string,
+  ): Promise<TrainingSessionRow[]> {
     const conditions = [eq(trainingSessions.userId, userId)];
     if (from) conditions.push(gte(trainingSessions.date, from));
     if (to) conditions.push(lte(trainingSessions.date, to));
+    if (planId) conditions.push(eq(trainingSessions.planId, planId));
 
     return this.db
       .select()

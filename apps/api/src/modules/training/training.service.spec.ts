@@ -31,6 +31,20 @@ function createRepositoryMock(overrides: Partial<TrainingRepository> = {}): Trai
   } as unknown as TrainingRepository;
 }
 
+describe('TrainingService.listSessions', () => {
+  it('passes the planId filter through to the repository', async () => {
+    const repository = createRepositoryMock({
+      listSessions: vi.fn().mockResolvedValue([{ id: 'session-1' }]),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.listSessions('user-1', undefined, undefined, 'plan-1');
+
+    expect(repository.listSessions).toHaveBeenCalledWith('user-1', undefined, undefined, 'plan-1');
+    expect(result).toEqual([{ id: 'session-1' }]);
+  });
+});
+
 describe('TrainingService.finishSession', () => {
   it('passes the elapsed duration through to the repository', async () => {
     const repository = createRepositoryMock({

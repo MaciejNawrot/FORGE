@@ -87,6 +87,7 @@ export type FinishTrainingSessionInput = z.infer<typeof finishTrainingSessionInp
 export const listTrainingSessionsQuerySchema = z.object({
   from: z.string().regex(isoDatePattern).optional(),
   to: z.string().regex(isoDatePattern).optional(),
+  planId: z.string().uuid().optional(),
 });
 export type ListTrainingSessionsQuery = z.infer<typeof listTrainingSessionsQuerySchema>;
 

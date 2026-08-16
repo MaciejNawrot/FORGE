@@ -18,7 +18,12 @@ export class TrainingController {
 
     return tsRestHandler(trainingContract, {
       listSessions: async ({ query }) => {
-        const sessions = await this.trainingService.listSessions(userId, query.from, query.to);
+        const sessions = await this.trainingService.listSessions(
+          userId,
+          query.from,
+          query.to,
+          query.planId,
+        );
         return { status: 200, body: sessions };
       },
 
