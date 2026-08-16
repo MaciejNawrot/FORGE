@@ -2,6 +2,8 @@
 
 import { Card, Input, Stack, Text } from '@acme/ui';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { EquipmentIcon } from '@/features/exercises';
 import { apiClient } from '@/shared/api';
@@ -64,6 +66,13 @@ export default function ExercisesPage() {
                     </span>
                   ))}
                 </Stack>
+                <Link
+                  href={`/exercises/${exercise.id}`}
+                  aria-label={dict.exercises.viewDetails}
+                  className="text-muted-foreground hover:text-primary hover:bg-accent shrink-0 rounded-full p-2 transition-colors"
+                >
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </Link>
               </Stack>
             </Card>
           ))}
