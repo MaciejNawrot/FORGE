@@ -15,7 +15,7 @@ export function VolumeChart({ values, labels }: { values: number[]; labels: stri
           const isLast = i === lastIndex;
           return (
             <div
-              key={labels[i] ?? i}
+              key={i}
               className={`group relative w-full min-w-0 flex-1 rounded-t-sm transition-colors ${
                 isLast ? 'bg-primary glow-primary' : 'bg-muted hover:bg-accent'
               }`}
@@ -37,7 +37,7 @@ export function VolumeChart({ values, labels }: { values: number[]; labels: stri
       <div className="font-data text-muted-foreground flex justify-between text-xs">
         {labels.map((label, i) => (
           <span
-            key={label}
+            key={i}
             className={i === lastIndex ? 'text-primary' : ''}
             aria-hidden={i !== lastIndex && i % labelStep !== 0}
           >

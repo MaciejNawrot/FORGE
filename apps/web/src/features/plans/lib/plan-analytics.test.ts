@@ -55,6 +55,20 @@ describe('computePlanStats', () => {
     expect(stats.volumeBySession).toEqual([]);
   });
 
+  it('averages duration only over sessions that have a duration, ignoring untimed sessions', () => {
+    const sessions = [
+      { date: '2026-08-01', durationSeconds: 3600, exercises: [] },
+      { date: '2026-08-08', durationSeconds: 3600, exercises: [] },
+      { date: '2026-08-15', durationSeconds: 3600, exercises: [] },
+      { date: '2026-08-16', durationSeconds: null, exercises: [] },
+    ];
+
+    const stats = computePlanStats(sessions);
+
+    expect(stats.sessionCount).toBe(4);
+    expect(stats.avgDurationSeconds).toBe(3600);
+  });
+
   it('ignores unweighted (bodyweight) sets when tracking personal bests', () => {
     const sessions = [
       {

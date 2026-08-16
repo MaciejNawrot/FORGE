@@ -34,8 +34,13 @@ export function computePlanStats(sessions: SessionLike[]): PlanStats {
   });
 
   const totalVolumeKg = volumeBySession.reduce((sum, entry) => sum + entry.volume, 0);
-  const totalDuration = sessions.reduce((sum, session) => sum + (session.durationSeconds ?? 0), 0);
-  const avgDurationSeconds = sessions.length > 0 ? Math.round(totalDuration / sessions.length) : 0;
+  const timedSessions = sessions.filter((session) => session.durationSeconds != null);
+  const totalDuration = timedSessions.reduce(
+    (sum, session) => sum + (session.durationSeconds ?? 0),
+    0,
+  );
+  const avgDurationSeconds =
+    timedSessions.length > 0 ? Math.round(totalDuration / timedSessions.length) : 0;
 
   return {
     totalVolumeKg,
