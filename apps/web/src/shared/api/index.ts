@@ -1,2 +1,2 @@
-export { apiClient } from './api-client';
+export { apiClient, unwrapResult } from './api-client';
 export { buildCookieHeader } from './build-cookie-header';

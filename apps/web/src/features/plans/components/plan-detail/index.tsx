@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
@@ -38,8 +38,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
   const updatePlan = useMutation({
     mutationFn: async (values: PlanFormValues) => {
       const result = await apiClient.workouts.updatePlan({ params: { id: plan.id }, body: values });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: () => router.refresh(),
   });
@@ -47,7 +46,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
   const removePlan = useMutation({
     mutationFn: async () => {
       const result = await apiClient.workouts.removePlan({ params: { id: plan.id } });
-      if (result.status !== 204) throw new Error(result.body.message);
+      unwrapResult(result, 204);
     },
     onSuccess: () => router.push('/plans'),
   });

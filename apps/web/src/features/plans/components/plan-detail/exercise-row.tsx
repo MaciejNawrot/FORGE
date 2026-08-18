@@ -2,7 +2,7 @@ import type { WorkoutExercise } from '@acme/contracts';
 import { Button, Stack } from '@acme/ui';
 import { TableCell, TableRow } from '@acme/ui/web';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 
@@ -23,7 +23,7 @@ export function ExerciseRow({
       const result = await apiClient.workouts.removeExercise({
         params: { planId, exerciseId: exercise.id },
       });
-      if (result.status !== 204) throw new Error(result.body.message);
+      unwrapResult(result, 204);
     },
     onSuccess: onRemoved,
   });

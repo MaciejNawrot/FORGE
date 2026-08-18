@@ -2,7 +2,7 @@ import type { Exercise } from '@acme/contracts';
 import { Button, Card, Input, Stack, Text } from '@acme/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { ExercisePicker } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 
@@ -25,8 +25,7 @@ export function AddPlanExerciseCard({ planId, onAdded }: { planId: string; onAdd
           weightKg: weightKg === '' ? undefined : Number(weightKg),
         },
       });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 201);
     },
     onSuccess: () => {
       setSelected(null);

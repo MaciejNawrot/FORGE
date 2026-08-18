@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
@@ -20,7 +20,7 @@ export function PlanListItem({ plan }: { plan: WorkoutPlanListItem }) {
   const mutation = useMutation({
     mutationFn: async () => {
       const result = await apiClient.workouts.removePlan({ params: { id: plan.id } });
-      if (result.status !== 204) throw new Error(result.body.message);
+      unwrapResult(result, 204);
     },
     onSuccess: () => router.refresh(),
   });

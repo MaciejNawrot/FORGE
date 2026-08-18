@@ -7,18 +7,17 @@ import { ArrowLeft, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useActiveSession, useActiveSessionStore } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
 import { buildExerciseRows } from '../../lib/plan-progress';
 import { AddSessionExerciseCard } from './add-session-exercise-card';
+import { DEFAULT_REST_SECONDS } from './constants';
 import { ExerciseLogCard } from './exercise-log-card';
 import { formatDuration } from './format-duration';
 import { useCountdown, useElapsedTime } from './use-timers';
-
-const REST_SECONDS = 90;
 
 export function SessionDetail({
   session,
@@ -55,8 +54,7 @@ export function SessionDetail({
         params: { id: session.id },
         body: { durationSeconds },
       });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: () => {
       end();
@@ -72,7 +70,7 @@ export function SessionDetail({
 
   const [resting, setResting] = useState(false);
   const [editingRest, setEditingRest] = useState(false);
-  const [restSeconds, setRestSeconds] = useState(REST_SECONDS);
+  const [restSeconds, setRestSeconds] = useState(DEFAULT_REST_SECONDS);
   const [restExerciseLogId, setRestExerciseLogId] = useState<string | null>(null);
   const rest = useCountdown(resting, restSeconds);
 
@@ -94,7 +92,7 @@ export function SessionDetail({
   const removeSession = useMutation({
     mutationFn: async () => {
       const result = await apiClient.training.removeSession({ params: { id: session.id } });
-      if (result.status !== 204) throw new Error(result.body.message);
+      unwrapResult(result, 204);
     },
     onSuccess: () => {
       if (isThisSessionActive) end();
@@ -114,8 +112,7 @@ export function SessionDetail({
         params: { sessionId: session.id, exerciseId: exerciseLogId },
         body: { restSeconds: value },
       });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
   });
 
@@ -133,9 +130,14 @@ export function SessionDetail({
   };
 
   const handleSetLogged = (logged: { id: string; restSeconds: number | null }) => {
+    const nextRestSeconds = logged.restSeconds ?? DEFAULT_REST_SECONDS;
     setRestExerciseLogId(logged.id);
-    setRestSeconds(logged.restSeconds ?? REST_SECONDS);
+    setRestSeconds(nextRestSeconds);
     setResting(true);
+    // Logging a set while already resting is a same-value transition for
+    // `resting`, so useCountdown's active-edge effect won't fire on its own
+    // — reset the remaining time directly to restart the countdown.
+    rest.setRemaining(nextRestSeconds);
     router.refresh();
   };
 

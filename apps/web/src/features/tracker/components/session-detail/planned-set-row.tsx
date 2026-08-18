@@ -1,10 +1,8 @@
-import type { AddTrainingSessionExerciseInput } from '@acme/contracts';
 import { Text } from '@acme/ui';
-import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { apiClient } from '@/shared/api';
 import { useLocale } from '@/shared/i18n/context';
 import { CompactNumberInput } from './number-inputs';
+import { useLogSet } from './use-log-set';
 
 export function PlannedSetRow({
   sessionId,
@@ -25,24 +23,7 @@ export function PlannedSetRow({
   const [reps, setReps] = useState(prefillReps);
   const [weightKg, setWeightKg] = useState(prefillWeightKg);
 
-  const logSet = useMutation({
-    mutationFn: async () => {
-      const input: AddTrainingSessionExerciseInput = {
-        exerciseId,
-        reps,
-        weightKg: weightKg === '' ? undefined : Number(weightKg),
-      };
-      const result = await apiClient.training.addSessionExercise({
-        params: { sessionId },
-        body: input,
-      });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
-    },
-    onSuccess: (group) => {
-      onLogged({ id: group.id, restSeconds: group.restSeconds });
-    },
-  });
+  const logSet = useLogSet(sessionId, exerciseId, onLogged);
 
   return (
     <div className="bg-muted/50 border-border flex flex-col gap-1 rounded-lg border border-dashed p-2">
@@ -58,9 +39,9 @@ export function PlannedSetRow({
         <input
           type="checkbox"
           disabled={logSet.isPending}
-          onChange={() => logSet.mutate()}
+          onChange={() => logSet.mutate({ reps, weightKg })}
           aria-label={dict.activeTracking.logSet}
-          className="accent-primary h-5 w-5 shrink-0"
+          className="border-border bg-background checked:bg-primary checked:border-primary h-5 w-5 shrink-0 appearance-none rounded border bg-center bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%272.5%27%3E%3Cpath%20d=%27M3%208.5l3%203%207-7%27/%3E%3C/svg%3E')]"
         />
       </div>
       {logSet.isError && (

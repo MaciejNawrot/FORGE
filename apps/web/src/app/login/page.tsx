@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { sessionQueryKey } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 
@@ -54,8 +54,7 @@ function LoginForm() {
   const mutation = useMutation({
     mutationFn: async (values: LoginFormValues) => {
       const result = await apiClient.auth.login({ body: values });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
@@ -113,8 +112,7 @@ function RegisterForm() {
   const mutation = useMutation({
     mutationFn: async (values: RegisterFormValues) => {
       const result = await apiClient.auth.register({ body: values });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 201);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: sessionQueryKey });

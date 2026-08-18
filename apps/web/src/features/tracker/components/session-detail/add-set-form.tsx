@@ -1,10 +1,8 @@
-import type { AddTrainingSessionExerciseInput } from '@acme/contracts';
 import { Text } from '@acme/ui';
-import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { apiClient } from '@/shared/api';
 import { useLocale } from '@/shared/i18n/context';
 import { CompactNumberInput } from './number-inputs';
+import { useLogSet } from './use-log-set';
 
 export function AddSetForm({
   sessionId,
@@ -23,24 +21,7 @@ export function AddSetForm({
   const [reps, setReps] = useState(lastReps);
   const [weightKg, setWeightKg] = useState(lastWeightKg == null ? '' : String(lastWeightKg));
 
-  const addSet = useMutation({
-    mutationFn: async () => {
-      const input: AddTrainingSessionExerciseInput = {
-        exerciseId,
-        reps,
-        weightKg: weightKg === '' ? undefined : Number(weightKg),
-      };
-      const result = await apiClient.training.addSessionExercise({
-        params: { sessionId },
-        body: input,
-      });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
-    },
-    onSuccess: (group) => {
-      onLogged({ id: group.id, restSeconds: group.restSeconds });
-    },
-  });
+  const addSet = useLogSet(sessionId, exerciseId, onLogged);
 
   return (
     <div className="flex flex-col gap-1">
@@ -51,7 +32,7 @@ export function AddSetForm({
         <button
           type="button"
           disabled={addSet.isPending}
-          onClick={() => addSet.mutate()}
+          onClick={() => addSet.mutate({ reps, weightKg })}
           className="bg-primary text-primary-foreground font-data shrink-0 rounded-lg px-3 py-2 text-xs uppercase disabled:opacity-50"
         >
           {addSet.isPending ? dict.common.logging : dict.activeTracking.logSet}

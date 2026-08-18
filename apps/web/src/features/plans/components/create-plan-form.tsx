@@ -7,7 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { useLocale } from '@/shared/i18n/context';
 
 type FormValues = z.infer<typeof createWorkoutPlanInputSchema>;
@@ -25,8 +25,7 @@ export function CreatePlanForm() {
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
       const result = await apiClient.workouts.createPlan({ body: values });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 201);
     },
     onSuccess: () => {
       reset();

@@ -1,12 +1,13 @@
 import { Card, Stack, Text } from '@acme/ui';
 import { useMutation } from '@tanstack/react-query';
 import { Timer, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
-import { apiClient } from '@/shared/api';
+import { useEffect, useRef, useState } from 'react';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import type { SessionExerciseRow } from '../../lib/plan-progress';
 import { AddSetForm } from './add-set-form';
+import { DEFAULT_REST_SECONDS } from './constants';
 import { formatDuration } from './format-duration';
 import { EditableNumber } from './number-inputs';
 import { PlannedSetRow } from './planned-set-row';
@@ -26,6 +27,12 @@ export function ExerciseLogCard({
   const { exercise: catalogExercise, loggedExercise, placeholderCount, placeholderPrefill } = row;
   const [editingNotes, setEditingNotes] = useState(false);
   const [editingRestBadge, setEditingRestBadge] = useState(false);
+  // Notes/rest can't be persisted until the exercise's first set is logged
+  // (there's no session-exercise row for them to attach to yet), so edits
+  // made before that land here and get flushed once it exists.
+  const [draftNotes, setDraftNotes] = useState('');
+  const [draftRestSeconds, setDraftRestSeconds] = useState(DEFAULT_REST_SECONDS);
+  const flushedDraftRef = useRef(false);
 
   const updateNotes = useMutation({
     mutationFn: async (notes: string | null) => {
@@ -34,8 +41,7 @@ export function ExerciseLogCard({
         params: { sessionId, exerciseId: loggedExercise.id },
         body: { notes },
       });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: onChanged,
   });
@@ -47,8 +53,7 @@ export function ExerciseLogCard({
         params: { sessionId, exerciseId: loggedExercise.id },
         body: { restSeconds: value },
       });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: onChanged,
   });
@@ -68,8 +73,7 @@ export function ExerciseLogCard({
         params: { sessionId, exerciseId: loggedExercise.id, setId },
         body: { reps, weightKg },
       });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: onChanged,
   });
@@ -80,7 +84,7 @@ export function ExerciseLogCard({
       const result = await apiClient.training.removeSessionSet({
         params: { sessionId, exerciseId: loggedExercise.id, setId },
       });
-      if (result.status !== 204) throw new Error(result.body.message);
+      unwrapResult(result, 204);
     },
     onSuccess: onChanged,
   });
@@ -91,7 +95,7 @@ export function ExerciseLogCard({
       const result = await apiClient.training.removeSessionExercise({
         params: { sessionId, exerciseId: loggedExercise.id },
       });
-      if (result.status !== 204) throw new Error(result.body.message);
+      unwrapResult(result, 204);
     },
     onSuccess: onChanged,
   });
@@ -104,6 +108,21 @@ export function ExerciseLogCard({
     (mutation) => mutation.isError,
   )?.error;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fires exactly once, on the null -> populated transition
+  useEffect(() => {
+    if (!loggedExercise || flushedDraftRef.current) return;
+    flushedDraftRef.current = true;
+    const trimmedNotes = draftNotes.trim();
+    if (trimmedNotes !== '') updateNotes.mutate(trimmedNotes);
+    if (draftRestSeconds !== DEFAULT_REST_SECONDS) {
+      updateRest.mutate(draftRestSeconds);
+      // The rest countdown for the set that just created this exercise already
+      // started from the generic default (this exercise had no persisted
+      // restSeconds yet to seed it with) — correct it to the pre-set value.
+      onSetLogged({ id: loggedExercise.id, restSeconds: draftRestSeconds });
+    }
+  }, [loggedExercise]);
+
   return (
     <Card className="glass-panel flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -111,33 +130,36 @@ export function ExerciseLogCard({
           <Text className="font-display text-primary text-lg uppercase">
             {catalogExercise.name}
           </Text>
-          {loggedExercise &&
-            (editingNotes ? (
-              <input
-                type="text"
-                // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
-                autoFocus
-                defaultValue={loggedExercise.notes ?? ''}
-                onBlur={(e) => {
-                  const value = e.target.value.trim();
+          {editingNotes ? (
+            <input
+              type="text"
+              // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
+              autoFocus
+              defaultValue={loggedExercise?.notes ?? draftNotes}
+              onBlur={(e) => {
+                const value = e.target.value.trim();
+                if (loggedExercise) {
                   updateNotes.mutate(value === '' ? null : value);
-                  setEditingNotes(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-                placeholder={dict.sessionDetail.notesPlaceholder}
-                className="text-muted-foreground font-data w-full bg-transparent text-xs outline-none"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditingNotes(true)}
-                className="text-muted-foreground hover:text-primary font-data text-left text-xs italic"
-              >
-                {loggedExercise.notes || dict.sessionDetail.notesPlaceholder}
-              </button>
-            ))}
+                } else {
+                  setDraftNotes(value);
+                }
+                setEditingNotes(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+              }}
+              placeholder={dict.sessionDetail.notesPlaceholder}
+              className="text-muted-foreground font-data w-full bg-transparent text-xs outline-none"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditingNotes(true)}
+              className="text-muted-foreground hover:text-primary font-data text-left text-xs italic"
+            >
+              {(loggedExercise?.notes ?? draftNotes) || dict.sessionDetail.notesPlaceholder}
+            </button>
+          )}
         </div>
         {loggedExercise && (
           <ConfirmButton
@@ -155,43 +177,46 @@ export function ExerciseLogCard({
         )}
       </div>
 
-      {loggedExercise && (
-        <div className="flex items-center gap-1.5">
-          <Timer className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
-          {editingRestBadge ? (
-            <input
-              type="number"
-              min={0}
-              // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
-              autoFocus
-              defaultValue={loggedExercise.restSeconds ?? ''}
-              onFocus={(e) => e.currentTarget.select()}
-              onBlur={(e) => {
-                const raw = e.target.value.trim();
-                if (raw !== '') {
-                  const value = Number(raw);
-                  if (Number.isFinite(value)) updateRest.mutate(Math.max(0, value));
+      <div className="flex items-center gap-1.5">
+        <Timer className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
+        {editingRestBadge ? (
+          <input
+            type="number"
+            min={0}
+            // biome-ignore lint/a11y/noAutofocus: opened by a direct user click, not on page load
+            autoFocus
+            defaultValue={loggedExercise?.restSeconds ?? draftRestSeconds}
+            onFocus={(e) => e.currentTarget.select()}
+            onBlur={(e) => {
+              const raw = e.target.value.trim();
+              if (raw !== '') {
+                const value = Number(raw);
+                if (Number.isFinite(value)) {
+                  const next = Math.max(0, value);
+                  if (loggedExercise) {
+                    updateRest.mutate(next);
+                  } else {
+                    setDraftRestSeconds(next);
+                  }
                 }
-                setEditingRestBadge(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.currentTarget.blur();
-              }}
-              className="font-data text-muted-foreground w-14 bg-transparent text-xs outline-none"
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditingRestBadge(true)}
-              className="text-muted-foreground hover:text-primary font-data text-xs"
-            >
-              {loggedExercise.restSeconds != null
-                ? formatDuration(loggedExercise.restSeconds)
-                : '—'}
-            </button>
-          )}
-        </div>
-      )}
+              }
+              setEditingRestBadge(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+            className="font-data text-muted-foreground w-14 bg-transparent text-xs outline-none"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditingRestBadge(true)}
+            className="text-muted-foreground hover:text-primary font-data text-xs"
+          >
+            {formatDuration(loggedExercise?.restSeconds ?? draftRestSeconds)}
+          </button>
+        )}
+      </div>
 
       <Stack gap="xs">
         {loggedSets.map((set, index) => (

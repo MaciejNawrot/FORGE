@@ -3,7 +3,7 @@ import { Button, Input, Text } from '@acme/ui';
 import { TableCell, TableRow } from '@acme/ui/web';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { useLocale } from '@/shared/i18n/context';
 
 export function ExerciseEditRow({
@@ -32,8 +32,7 @@ export function ExerciseEditRow({
         params: { planId, exerciseId: exercise.id },
         body: values,
       });
-      if (result.status !== 200) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 200);
     },
     onSuccess: onDone,
   });

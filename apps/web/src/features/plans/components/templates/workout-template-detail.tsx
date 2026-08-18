@@ -5,7 +5,7 @@ import { Button, Card, Text } from '@acme/ui';
 import { useMutation } from '@tanstack/react-query';
 import { Dumbbell, ListOrdered, Play, Repeat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/shared/api';
+import { apiClient, unwrapResult } from '@/shared/api';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
 
@@ -23,8 +23,7 @@ export function WorkoutTemplateDetail({ template }: WorkoutTemplateDetailProps) 
   const fork = useMutation({
     mutationFn: async () => {
       const result = await apiClient.workouts.forkPlan({ params: { id: template.id } });
-      if (result.status !== 201) throw new Error(result.body.message);
-      return result.body;
+      return unwrapResult(result, 201);
     },
     onSuccess: (plan) => router.push(`/plans/${plan.id}`),
   });
