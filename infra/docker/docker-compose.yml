@@ -47,10 +47,10 @@ services:
       PORT: "3001"
       HOST: 0.0.0.0
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/acme_dev
-      CORS_ORIGIN: http://localhost:3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       LOG_LEVEL: info
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-secret-change-me-to-a-random-32-char-value}
-      BETTER_AUTH_URL: http://localhost:3001
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
     ports:
       - "3001:3001"
     depends_on:
