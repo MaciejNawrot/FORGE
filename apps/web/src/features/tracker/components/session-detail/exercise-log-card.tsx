@@ -105,7 +105,7 @@ export function ExerciseLogCard({
       }}
       {...attributes}
       {...listeners}
-      className={`glass-panel flex flex-col gap-3 ${isOver ? 'bg-accent' : ''} ${isDragging ? 'opacity-50' : ''}`}
+      className={`glass-panel flex flex-col gap-3 ${isOver ? 'outline-primary outline-2 -outline-offset-2' : ''} ${isDragging ? 'opacity-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">

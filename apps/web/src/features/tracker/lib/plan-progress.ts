@@ -92,25 +92,30 @@ export function buildExerciseRows<P extends PlanExerciseLike, L extends LoggedEx
 }
 
 /**
- * Collapses adjacent rows sharing a `pairGroupId` into a 2-tuple; everything
- * else stays a single row. Relies on the API always keeping paired rows
- * adjacent (see `linkPairGroup`/`pairExercises` on the backend) — a row
- * whose partner isn't its immediate neighbor is left ungrouped rather than
- * searched for, since that would indicate the adjacency invariant broke.
+ * Collapses rows sharing a `pairGroupId` into a 2-tuple, placed at the
+ * earlier row's position; everything else stays a single row. Rows for a
+ * plan-driven session render in plan order, not `TrainingSessionExercise`'s
+ * own `position` — the two orderings aren't the same array, so a paired
+ * partner can land anywhere in `rows`, not necessarily next to its match.
+ * This searches the whole list rather than assuming adjacency.
  */
 export function groupPairedRows<P extends PlanExerciseLike, L extends LoggedExerciseLike>(
   rows: ExerciseRow<P, L>[],
 ): (ExerciseRow<P, L> | [ExerciseRow<P, L>, ExerciseRow<P, L>])[] {
   const result: (ExerciseRow<P, L> | [ExerciseRow<P, L>, ExerciseRow<P, L>])[] = [];
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row) continue;
-    const next = rows[i + 1];
-    if (row.pairGroupId && next && next.pairGroupId === row.pairGroupId) {
-      result.push([row, next]);
-      i++;
+  const consumed = new Set<string>();
+  for (const row of rows) {
+    if (consumed.has(row.key)) continue;
+    const partner = row.pairGroupId
+      ? rows.find((other) => other.key !== row.key && other.pairGroupId === row.pairGroupId)
+      : undefined;
+    if (partner) {
+      result.push([row, partner]);
+      consumed.add(row.key);
+      consumed.add(partner.key);
     } else {
       result.push(row);
+      consumed.add(row.key);
     }
   }
   return result;

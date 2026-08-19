@@ -181,11 +181,15 @@ describe('groupPairedRows', () => {
     expect(groupPairedRows([rowA, rowB, rowC])).toEqual([[rowA, rowB], rowC]);
   });
 
+  it('collapses two rows sharing a pairGroupId even when another row sits between them', () => {
+    expect(groupPairedRows([rowA, rowC, rowB])).toEqual([[rowA, rowB], rowC]);
+  });
+
   it('leaves unpaired rows as single entries', () => {
     expect(groupPairedRows([rowC])).toEqual([rowC]);
   });
 
-  it('leaves a row alone if its pair partner is not present (defensive: should not happen given the adjacency invariant)', () => {
+  it('leaves a row alone if its pair partner is not present', () => {
     const orphan = { ...rowA, pairGroupId: 'group-2' };
     expect(groupPairedRows([orphan, rowC])).toEqual([orphan, rowC]);
   });

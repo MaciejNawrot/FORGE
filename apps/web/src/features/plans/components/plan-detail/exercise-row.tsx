@@ -71,7 +71,7 @@ export function ExerciseRow({
       {...listeners}
       className={[
         pairedExerciseName ? 'border-primary/40 border-l-2' : '',
-        isOver ? 'bg-accent' : '',
+        isOver ? 'outline-primary outline-2 -outline-offset-2' : '',
         isDragging ? 'opacity-50' : '',
       ]
         .filter(Boolean)
