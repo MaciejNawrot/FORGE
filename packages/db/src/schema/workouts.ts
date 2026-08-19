@@ -51,10 +51,16 @@ export const workoutExercises = pgTable(
     reps: integer('reps').notNull(),
     weightKg: numeric('weight_kg', { precision: 6, scale: 2, mode: 'number' }),
     position: integer('position').notNull(),
+    // Shared tag: two rows with the same non-null value are paired into a
+    // superset. Not a FK — exactly-2-per-group is enforced by the API layer.
+    pairGroupId: uuid('pair_group_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('workout_exercises_planId_idx').on(table.planId)],
+  (table) => [
+    index('workout_exercises_planId_idx').on(table.planId),
+    index('workout_exercises_planId_pairGroupId_idx').on(table.planId, table.pairGroupId),
+  ],
 );
 
 export const workoutPlanRelations = relations(workoutPlans, ({ many }) => ({
