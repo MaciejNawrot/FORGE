@@ -100,6 +100,11 @@ export const pl: Dictionary = {
     addExercise: 'Dodaj ćwiczenie',
     removeExerciseTitle: 'Usunąć to ćwiczenie?',
     removeExerciseDescription: (name: string) => `„${name}” zostanie usunięte z tego planu.`,
+    pair: 'Połącz z innym ćwiczeniem',
+    unpair: 'Rozłącz',
+    pairPickerTitle: 'Połącz z…',
+    noPairableExercises: 'Brak innych ćwiczeń do połączenia — dodaj jedno najpierw.',
+    pairedWith: (name: string) => `Połączone z ${name}`,
   },
 
   planAnalytics: {
@@ -181,6 +186,7 @@ export const pl: Dictionary = {
     lastTime: (weightKg: number | null, reps: number, date: string) =>
       `Poprzednio: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} powt. (${date})`,
     alreadyTrained: (muscleGroups: string) => `Już trenowane dziś: ${muscleGroups}`,
+    pairedRest: 'Wspólny odpoczynek — zapisanie serii w dowolnym ćwiczeniu go uruchamia',
   },
 
   sessionDetail: {
@@ -195,6 +201,10 @@ export const pl: Dictionary = {
     finishDescription:
       'Możesz wrócić do zapisywania serii później — to tylko przenosi Cię z powrotem do Śledzenia.',
     removeExerciseDescription: (name: string) => `„${name}” zostanie usunięte z tego treningu.`,
+    pair: 'Połącz z innym ćwiczeniem',
+    unpair: 'Rozłącz',
+    pairPickerTitle: 'Połącz z…',
+    noPairableExercises: 'Brak innych ćwiczeń do połączenia.',
   },
 
   mascot: {
