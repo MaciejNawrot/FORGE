@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { buildExerciseRows, prefillFrom } from './plan-progress';
+import { buildExerciseRows, groupPairedRows, prefillFrom } from './plan-progress';
 
 describe('buildExerciseRows', () => {
-  const benchPlan = { exercise: { id: 'bench' }, sets: 3, reps: 8, weightKg: 60 };
+  const benchPlan = {
+    exercise: { id: 'bench' },
+    sets: 3,
+    reps: 8,
+    weightKg: 60,
+    pairGroupId: null,
+  };
   const plan = { exercises: [benchPlan] };
 
   it('fills every target set as a placeholder when nothing is logged yet, prefilled from the plan target', () => {
@@ -15,6 +21,7 @@ describe('buildExerciseRows', () => {
         loggedExercise: null,
         placeholderCount: 3,
         placeholderPrefill: { reps: 8, weightKg: '60' },
+        pairGroupId: null,
       },
     ]);
   });
@@ -34,6 +41,7 @@ describe('buildExerciseRows', () => {
         { reps: 8, weightKg: 60 },
         { reps: 8, weightKg: 62.5 },
       ],
+      pairGroupId: null,
     };
 
     const rows = buildExerciseRows(
@@ -49,6 +57,7 @@ describe('buildExerciseRows', () => {
         loggedExercise,
         placeholderCount: 1,
         placeholderPrefill: { reps: 8, weightKg: '62.5' },
+        pairGroupId: null,
       },
     ]);
   });
@@ -61,6 +70,7 @@ describe('buildExerciseRows', () => {
         { reps: 8, weightKg: 60 },
         { reps: 7, weightKg: 60 },
       ],
+      pairGroupId: null,
     };
 
     const rows = buildExerciseRows(plan, [loggedExercise], undefined);
@@ -69,7 +79,11 @@ describe('buildExerciseRows', () => {
   });
 
   it('passes through a logged exercise not in the plan with zero placeholders', () => {
-    const adHoc = { exercise: { id: 'curls' }, sets: [{ reps: 12, weightKg: 20 }] };
+    const adHoc = {
+      exercise: { id: 'curls' },
+      sets: [{ reps: 12, weightKg: 20 }],
+      pairGroupId: null,
+    };
 
     const rows = buildExerciseRows(plan, [adHoc], undefined);
 
@@ -80,6 +94,7 @@ describe('buildExerciseRows', () => {
         loggedExercise: null,
         placeholderCount: 3,
         placeholderPrefill: { reps: 8, weightKg: '60' },
+        pairGroupId: null,
       },
       {
         key: 'curls',
@@ -87,12 +102,17 @@ describe('buildExerciseRows', () => {
         loggedExercise: adHoc,
         placeholderCount: 0,
         placeholderPrefill: { reps: 0, weightKg: '' },
+        pairGroupId: null,
       },
     ]);
   });
 
   it('returns rows from session exercises only, all with zero placeholders, when there is no plan', () => {
-    const adHoc = { exercise: { id: 'curls' }, sets: [{ reps: 12, weightKg: 20 }] };
+    const adHoc = {
+      exercise: { id: 'curls' },
+      sets: [{ reps: 12, weightKg: 20 }],
+      pairGroupId: null,
+    };
 
     const rows = buildExerciseRows(null, [adHoc], undefined);
 
@@ -103,6 +123,7 @@ describe('buildExerciseRows', () => {
         loggedExercise: adHoc,
         placeholderCount: 0,
         placeholderPrefill: { reps: 0, weightKg: '' },
+        pairGroupId: null,
       },
     ]);
   });
@@ -127,5 +148,45 @@ describe('prefillFrom', () => {
     const last = { reps: 12, weightKg: null };
 
     expect(prefillFrom(planExercise, last)).toEqual({ reps: 12, weightKg: '' });
+  });
+});
+
+describe('groupPairedRows', () => {
+  const rowA = {
+    key: 'a',
+    exercise: { id: 'a' },
+    loggedExercise: null,
+    placeholderCount: 0,
+    placeholderPrefill: { reps: 0, weightKg: '' },
+    pairGroupId: 'group-1',
+  };
+  const rowB = {
+    key: 'b',
+    exercise: { id: 'b' },
+    loggedExercise: null,
+    placeholderCount: 0,
+    placeholderPrefill: { reps: 0, weightKg: '' },
+    pairGroupId: 'group-1',
+  };
+  const rowC = {
+    key: 'c',
+    exercise: { id: 'c' },
+    loggedExercise: null,
+    placeholderCount: 0,
+    placeholderPrefill: { reps: 0, weightKg: '' },
+    pairGroupId: null,
+  };
+
+  it('collapses two adjacent rows sharing a pairGroupId into a tuple', () => {
+    expect(groupPairedRows([rowA, rowB, rowC])).toEqual([[rowA, rowB], rowC]);
+  });
+
+  it('leaves unpaired rows as single entries', () => {
+    expect(groupPairedRows([rowC])).toEqual([rowC]);
+  });
+
+  it('leaves a row alone if its pair partner is not present (defensive: should not happen given the adjacency invariant)', () => {
+    const orphan = { ...rowA, pairGroupId: 'group-2' };
+    expect(groupPairedRows([orphan, rowC])).toEqual([orphan, rowC]);
   });
 });
