@@ -4,7 +4,7 @@ import type { WorkoutPlanWithExercises } from '@acme/contracts';
 import { updateWorkoutPlanInputSchema } from '@acme/contracts';
 import { Badge, Button, Card, Input, Stack, Text } from '@acme/ui';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@acme/ui/web';
-import { DndContext, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Repeat } from 'lucide-react';
@@ -74,6 +74,11 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
     if (!over || active.id === over.id) return;
     pairExercise.mutate({ exerciseId: String(active.id), pairWithExerciseId: String(over.id) });
   };
+
+  // A plain click on a nested button (Edit, pair, Remove) is a pointer-down
+  // + pointer-up at the same spot — require real movement before it counts
+  // as a drag, or dnd-kit's pointer capture swallows those clicks.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   return (
     <Stack gap="lg" className="pb-24">
@@ -152,7 +157,7 @@ export function PlanDetail({ plan }: { plan: WorkoutPlanWithExercises }) {
         {plan.exercises.length === 0 ? (
           <Text tone="muted">{dict.planDetail.noExercises}</Text>
         ) : (
-          <DndContext onDragEnd={handleDragEnd}>
+          <DndContext id="plan-exercises-dnd" sensors={sensors} onDragEnd={handleDragEnd}>
             <Table>
               <TableHeader>
                 <TableRow>

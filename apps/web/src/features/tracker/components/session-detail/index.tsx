@@ -2,7 +2,7 @@
 
 import type { TrainingSessionWithExercises, WorkoutPlanWithExercises } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
-import { DndContext, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
@@ -169,6 +169,15 @@ export function SessionDetail({
     });
   };
 
+  // A plain click on a nested button (pair, delete, rest badge) is a
+  // pointer-down + pointer-up at the same spot — require real movement
+  // before it counts as a drag, or dnd-kit's pointer capture swallows those
+  // clicks (confirmed live: a plain click was mis-registered as a
+  // zero-distance drag-and-drop and the click never reached the button).
+  const exerciseDragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
   return (
     <Stack gap="lg" className="pb-24">
       <Link
@@ -238,7 +247,11 @@ export function SessionDetail({
           <Text tone="muted">{dict.sessionDetail.noSets}</Text>
         </Card>
       ) : (
-        <DndContext onDragEnd={handleExerciseDragEnd}>
+        <DndContext
+          id="session-exercises-dnd"
+          sensors={exerciseDragSensors}
+          onDragEnd={handleExerciseDragEnd}
+        >
           <Stack gap="sm">
             <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
               {dict.activeTracking.loggedExercises}
