@@ -330,14 +330,12 @@ describe('TrainingService.pairExercise', () => {
         .mockResolvedValueOnce(existingPrimary) // primary already logged
         .mockResolvedValueOnce(undefined), // partner not logged yet
       nextPosition: vi.fn().mockResolvedValue(1),
-      createExerciseGroup: vi
-        .fn()
-        .mockResolvedValue({
-          id: 'group-2',
-          sessionId: 'session-1',
-          position: 1,
-          pairGroupId: null,
-        }),
+      createExerciseGroup: vi.fn().mockResolvedValue({
+        id: 'group-2',
+        sessionId: 'session-1',
+        position: 1,
+        pairGroupId: null,
+      }),
       linkPairGroup: vi.fn().mockResolvedValue('group-1'),
       findSessionExerciseById: vi.fn().mockResolvedValue(enriched),
     });

@@ -83,7 +83,6 @@ export function ExerciseLogCard({
     pairExercise,
   ].find((mutation) => mutation.isError)?.error;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: fires exactly once, on the null -> populated transition
   useEffect(() => {
     if (!loggedExercise || flushedDraftRef.current) return;
     flushedDraftRef.current = true;
