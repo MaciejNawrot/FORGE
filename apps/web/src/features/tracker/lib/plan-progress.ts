@@ -5,11 +5,16 @@ type PlanExerciseLike = {
   sets: number;
   reps: number;
   weightKg: number | null;
+  pairGroupId: string | null;
 };
 
 type LoggedSet = { reps: number; weightKg: number | null };
 
-type LoggedExerciseLike = { exercise: { id: string }; sets: LoggedSet[] };
+type LoggedExerciseLike = {
+  exercise: { id: string };
+  sets: LoggedSet[];
+  pairGroupId: string | null;
+};
 
 type LastPerformanceLike = { exerciseId: string; reps: number; weightKg: number | null };
 
@@ -19,6 +24,7 @@ export type ExerciseRow<P extends PlanExerciseLike, L extends LoggedExerciseLike
   loggedExercise: L | null;
   placeholderCount: number;
   placeholderPrefill: { reps: number; weightKg: string };
+  pairGroupId: string | null;
 };
 
 type PrefillSource = { reps: number; weightKg: number | null };
@@ -67,6 +73,7 @@ export function buildExerciseRows<P extends PlanExerciseLike, L extends LoggedEx
       loggedExercise,
       placeholderCount,
       placeholderPrefill,
+      pairGroupId: loggedExercise?.pairGroupId ?? planExercise.pairGroupId,
     };
   });
 
@@ -78,9 +85,35 @@ export function buildExerciseRows<P extends PlanExerciseLike, L extends LoggedEx
       loggedExercise,
       placeholderCount: 0,
       placeholderPrefill: { reps: 0, weightKg: '' },
+      pairGroupId: loggedExercise.pairGroupId,
     }));
 
   return [...planRows, ...adHocRows];
+}
+
+/**
+ * Collapses adjacent rows sharing a `pairGroupId` into a 2-tuple; everything
+ * else stays a single row. Relies on the API always keeping paired rows
+ * adjacent (see `linkPairGroup`/`pairExercises` on the backend) — a row
+ * whose partner isn't its immediate neighbor is left ungrouped rather than
+ * searched for, since that would indicate the adjacency invariant broke.
+ */
+export function groupPairedRows<P extends PlanExerciseLike, L extends LoggedExerciseLike>(
+  rows: ExerciseRow<P, L>[],
+): (ExerciseRow<P, L> | [ExerciseRow<P, L>, ExerciseRow<P, L>])[] {
+  const result: (ExerciseRow<P, L> | [ExerciseRow<P, L>, ExerciseRow<P, L>])[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row) continue;
+    const next = rows[i + 1];
+    if (row.pairGroupId && next && next.pairGroupId === row.pairGroupId) {
+      result.push([row, next]);
+      i++;
+    } else {
+      result.push(row);
+    }
+  }
+  return result;
 }
 
 export type SessionExerciseRow = ExerciseRow<WorkoutExercise, TrainingSessionExercise>;

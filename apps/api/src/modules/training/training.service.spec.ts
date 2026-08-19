@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { PairConflictError } from '../../common/errors/pair-conflict.error.js';
 import type { TrainingRepository } from './training.repository.js';
 import { TrainingService } from './training.service.js';
 
@@ -27,6 +28,9 @@ function createRepositoryMock(overrides: Partial<TrainingRepository> = {}): Trai
     updateExerciseRest: vi.fn(),
     removeExercise: vi.fn(),
     lastPerformanceByExerciseIds: vi.fn(),
+    findGroupById: vi.fn(),
+    linkPairGroup: vi.fn(),
+    unpairSessionExercise: vi.fn(),
     ...overrides,
   } as unknown as TrainingRepository;
 }
@@ -266,5 +270,128 @@ describe('TrainingService.getLastPerformance', () => {
 
     expect(result).toEqual([]);
     expect(repository.lastPerformanceByExerciseIds).not.toHaveBeenCalled();
+  });
+});
+
+describe('TrainingService.pairExercise', () => {
+  it('returns not-found when the session is not owned by the user', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue(undefined),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.pairExercise('session-1', 'user-1', 'ex-1', 'ex-2');
+
+    expect(result).toEqual({ outcome: 'not-found' });
+  });
+
+  it('returns conflict when pairing an exercise with itself', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1' }),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.pairExercise('session-1', 'user-1', 'ex-1', 'ex-1');
+
+    expect(result).toEqual({
+      outcome: 'conflict',
+      message: 'Cannot pair an exercise with itself',
+    });
+  });
+
+  it('returns conflict when either side is already paired', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1' }),
+      findGroupByExercise: vi.fn().mockResolvedValue({ id: 'group-1', pairGroupId: 'existing' }),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.pairExercise('session-1', 'user-1', 'ex-1', 'ex-2');
+
+    expect(result).toEqual({
+      outcome: 'conflict',
+      message: 'One of these exercises is already paired',
+    });
+    expect(repository.withTransaction).not.toHaveBeenCalled();
+  });
+
+  it('materializes a not-yet-logged side before linking the pair', async () => {
+    const existingPrimary = {
+      id: 'group-1',
+      sessionId: 'session-1',
+      position: 0,
+      pairGroupId: null,
+    };
+    const enriched = { id: 'group-1', exercise: { name: 'Bench' } };
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1' }),
+      findGroupByExercise: vi
+        .fn()
+        .mockResolvedValueOnce(existingPrimary) // primary already logged
+        .mockResolvedValueOnce(undefined), // partner not logged yet
+      nextPosition: vi.fn().mockResolvedValue(1),
+      createExerciseGroup: vi.fn().mockResolvedValue({
+        id: 'group-2',
+        sessionId: 'session-1',
+        position: 1,
+        pairGroupId: null,
+      }),
+      linkPairGroup: vi.fn().mockResolvedValue('group-1'),
+      findSessionExerciseById: vi.fn().mockResolvedValue(enriched),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.pairExercise('session-1', 'user-1', 'ex-1', 'ex-2');
+
+    expect(repository.createExerciseGroup).toHaveBeenCalledWith(
+      { sessionId: 'session-1', exerciseId: 'ex-2', position: 1 },
+      TX,
+    );
+    expect(repository.linkPairGroup).toHaveBeenCalledWith(
+      'session-1',
+      existingPrimary,
+      { id: 'group-2', sessionId: 'session-1', position: 1, pairGroupId: null },
+      TX,
+    );
+    expect(result).toEqual({ outcome: 'ok', exercise: enriched });
+  });
+});
+
+describe('TrainingService.unpairExercise', () => {
+  it('returns not-found when the session is not owned by the user', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue(undefined),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.unpairExercise('session-1', 'log-1', 'user-1');
+
+    expect(result).toEqual({ outcome: 'not-found' });
+  });
+
+  it('returns conflict when the repository rejects a not-paired exercise', async () => {
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1' }),
+      unpairSessionExercise: vi.fn().mockRejectedValue(new PairConflictError('not paired')),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.unpairExercise('session-1', 'log-1', 'user-1');
+
+    expect(result).toEqual({ outcome: 'conflict', message: 'not paired' });
+  });
+
+  it('returns the enriched exercise on success', async () => {
+    const enriched = { id: 'log-1', exercise: { name: 'Bench' } };
+    const repository = createRepositoryMock({
+      findSessionById: vi.fn().mockResolvedValue({ id: 'session-1' }),
+      unpairSessionExercise: vi.fn().mockResolvedValue({ id: 'log-1', pairGroupId: null }),
+      findSessionExerciseById: vi.fn().mockResolvedValue(enriched),
+    });
+    const service = new TrainingService(repository);
+
+    const result = await service.unpairExercise('session-1', 'log-1', 'user-1');
+
+    expect(result).toEqual({ outcome: 'ok', exercise: enriched });
   });
 });

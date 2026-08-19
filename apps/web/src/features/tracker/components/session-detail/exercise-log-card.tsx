@@ -1,9 +1,10 @@
 import { Card, Stack, Text } from '@acme/ui';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useMutation } from '@tanstack/react-query';
-import { Timer, Trash2, X } from 'lucide-react';
+import { Link2, Timer, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { apiClient, unwrapResult } from '@/shared/api';
-import { ConfirmButton } from '@/shared/components';
+import { ConfirmButton, PairPicker } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import type { SessionExerciseRow } from '../../lib/plan-progress';
 import { AddSetForm } from './add-set-form';
@@ -11,17 +12,22 @@ import { DEFAULT_REST_SECONDS } from './constants';
 import { formatDuration } from './format-duration';
 import { EditableNumber } from './number-inputs';
 import { PlannedSetRow } from './planned-set-row';
+import { useExerciseLogMutations } from './use-exercise-log-mutations';
 
 export function ExerciseLogCard({
   sessionId,
   row,
+  otherRows,
   onSetLogged,
   onChanged,
+  onPaired,
 }: {
   sessionId: string;
   row: SessionExerciseRow;
+  otherRows: SessionExerciseRow[];
   onSetLogged: (loggedExercise: { id: string; restSeconds: number | null }) => void;
   onChanged: () => void;
+  onPaired: () => void;
 }) {
   const { dict } = useLocale();
   const { exercise: catalogExercise, loggedExercise, placeholderCount, placeholderPrefill } = row;
@@ -34,81 +40,49 @@ export function ExerciseLogCard({
   const [draftRestSeconds, setDraftRestSeconds] = useState(DEFAULT_REST_SECONDS);
   const flushedDraftRef = useRef(false);
 
-  const updateNotes = useMutation({
-    mutationFn: async (notes: string | null) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.updateSessionExerciseNotes({
-        params: { sessionId, exerciseId: loggedExercise.id },
-        body: { notes },
+  const { updateNotes, updateRest, updateSet, removeSet, removeExercise } = useExerciseLogMutations(
+    sessionId,
+    loggedExercise,
+    onChanged,
+  );
+
+  const pairExercise = useMutation({
+    mutationFn: async (pairWithExerciseId: string) => {
+      const result = await apiClient.training.pairSessionExercise({
+        params: { sessionId },
+        body: { exerciseId: catalogExercise.id, pairWithExerciseId },
       });
       return unwrapResult(result, 200);
     },
-    onSuccess: onChanged,
+    onSuccess: onPaired,
   });
 
-  const updateRest = useMutation({
-    mutationFn: async (value: number) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.updateSessionExerciseRest({
-        params: { sessionId, exerciseId: loggedExercise.id },
-        body: { restSeconds: value },
-      });
-      return unwrapResult(result, 200);
-    },
-    onSuccess: onChanged,
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+    isDragging,
+  } = useDraggable({
+    id: catalogExercise.id,
   });
-
-  const updateSet = useMutation({
-    mutationFn: async ({
-      setId,
-      reps,
-      weightKg,
-    }: {
-      setId: string;
-      reps: number;
-      weightKg: number | null;
-    }) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.updateSessionSet({
-        params: { sessionId, exerciseId: loggedExercise.id, setId },
-        body: { reps, weightKg },
-      });
-      return unwrapResult(result, 200);
-    },
-    onSuccess: onChanged,
-  });
-
-  const removeSet = useMutation({
-    mutationFn: async (setId: string) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.removeSessionSet({
-        params: { sessionId, exerciseId: loggedExercise.id, setId },
-      });
-      unwrapResult(result, 204);
-    },
-    onSuccess: onChanged,
-  });
-
-  const removeExercise = useMutation({
-    mutationFn: async () => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.removeSessionExercise({
-        params: { sessionId, exerciseId: loggedExercise.id },
-      });
-      unwrapResult(result, 204);
-    },
-    onSuccess: onChanged,
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: catalogExercise.id,
+    disabled: row.pairGroupId !== null,
   });
 
   const loggedSets = loggedExercise?.sets ?? [];
   const lastSet = loggedSets[loggedSets.length - 1];
   // These edits close their input on commit, so a failed save is otherwise
   // invisible — surface whichever one is currently erroring.
-  const mutationError = [updateNotes, updateRest, updateSet, removeSet, removeExercise].find(
-    (mutation) => mutation.isError,
-  )?.error;
+  const mutationError = [
+    updateNotes,
+    updateRest,
+    updateSet,
+    removeSet,
+    removeExercise,
+    pairExercise,
+  ].find((mutation) => mutation.isError)?.error;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: fires exactly once, on the null -> populated transition
   useEffect(() => {
     if (!loggedExercise || flushedDraftRef.current) return;
     flushedDraftRef.current = true;
@@ -124,7 +98,15 @@ export function ExerciseLogCard({
   }, [loggedExercise]);
 
   return (
-    <Card className="glass-panel flex flex-col gap-3">
+    <Card
+      ref={(node) => {
+        setDragRef(node);
+        setDropRef(node);
+      }}
+      {...attributes}
+      {...listeners}
+      className={`glass-panel flex flex-col gap-3 ${isOver ? 'bg-accent' : ''} ${isDragging ? 'opacity-50' : ''}`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Text className="font-display text-primary text-lg uppercase">
@@ -162,18 +144,34 @@ export function ExerciseLogCard({
           )}
         </div>
         {loggedExercise && (
-          <ConfirmButton
-            variant="ghost"
-            size="sm"
-            title={dict.planDetail.removeExerciseTitle}
-            description={dict.sessionDetail.removeExerciseDescription(catalogExercise.name)}
-            pending={removeExercise.isPending}
-            onConfirm={() => removeExercise.mutate()}
-            className="text-destructive h-7 w-7 shrink-0 p-0"
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            <span className="sr-only">{dict.sessionDetail.deleteWorkoutSr}</span>
-          </ConfirmButton>
+          <div className="flex shrink-0 items-center gap-1">
+            <PairPicker
+              variant="ghost"
+              size="sm"
+              title={dict.sessionDetail.pairPickerTitle}
+              emptyLabel={dict.sessionDetail.noPairableExercises}
+              items={otherRows.map((other) => ({
+                id: other.exercise.id,
+                name: other.exercise.name,
+              }))}
+              onPick={(pairWithExerciseId) => pairExercise.mutate(pairWithExerciseId)}
+              aria-label={dict.sessionDetail.pair}
+            >
+              <Link2 className="h-4 w-4" aria-hidden="true" />
+            </PairPicker>
+            <ConfirmButton
+              variant="ghost"
+              size="sm"
+              title={dict.planDetail.removeExerciseTitle}
+              description={dict.sessionDetail.removeExerciseDescription(catalogExercise.name)}
+              pending={removeExercise.isPending}
+              onConfirm={() => removeExercise.mutate()}
+              className="text-destructive h-7 w-7 p-0"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">{dict.sessionDetail.deleteWorkoutSr}</span>
+            </ConfirmButton>
+          </div>
         )}
       </div>
 

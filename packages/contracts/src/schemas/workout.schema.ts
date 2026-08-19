@@ -10,6 +10,7 @@ export const workoutExerciseSchema = z.object({
   reps: z.number().int().min(1).max(500),
   weightKg: z.coerce.number().min(0).max(1000).nullable(),
   position: z.number().int().min(0),
+  pairGroupId: z.string().uuid().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -29,6 +30,11 @@ export const updateWorkoutExerciseInputSchema = z.object({
   weightKg: z.number().min(0).max(1000).nullable().optional(),
 });
 export type UpdateWorkoutExerciseInput = z.infer<typeof updateWorkoutExerciseInputSchema>;
+
+export const pairWorkoutExerciseInputSchema = z.object({
+  pairWithExerciseId: z.string().uuid(),
+});
+export type PairWorkoutExerciseInput = z.infer<typeof pairWorkoutExerciseInputSchema>;
 
 export const workoutPlanSchema = z.object({
   id: z.string().uuid(),

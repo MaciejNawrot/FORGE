@@ -89,6 +89,11 @@ export const en = {
     exercisesHeading: 'Exercises',
     noExercises: 'No exercises yet — add one below.',
     addExercise: 'Add exercise',
+    pair: 'Pair with another exercise',
+    unpair: 'Unpair',
+    pairPickerTitle: 'Pair with…',
+    noPairableExercises: 'No other exercises to pair with — add one first.',
+    pairedWith: (name: string) => `Paired with ${name}`,
     removeExerciseTitle: 'Remove this exercise?',
     removeExerciseDescription: (name: string) => `"${name}" will be removed from this plan.`,
   },
@@ -171,6 +176,7 @@ export const en = {
     lastTime: (weightKg: number | null, reps: number, date: string) =>
       `Last time: ${weightKg != null ? `${weightKg} kg × ` : ''}${reps} reps (${date})`,
     alreadyTrained: (muscleGroups: string) => `Already trained today: ${muscleGroups}`,
+    pairedRest: 'Shared rest — logging a set on either exercise starts it',
   },
 
   sessionDetail: {
@@ -185,6 +191,10 @@ export const en = {
     finishTitle: 'Finish this workout?',
     finishDescription: 'You can keep logging sets later — this just takes you back to Tracking.',
     removeExerciseDescription: (name: string) => `"${name}" will be removed from this training.`,
+    pair: 'Pair with another exercise',
+    unpair: 'Unpair',
+    pairPickerTitle: 'Pair with…',
+    noPairableExercises: 'No other exercises to pair with yet.',
   },
 
   mascot: {

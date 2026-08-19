@@ -2,6 +2,7 @@
 
 import type { TrainingSessionWithExercises, WorkoutPlanWithExercises } from '@acme/contracts';
 import { Card, Stack, Text } from '@acme/ui';
+import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Flag, RotateCcw, Timer, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
@@ -12,11 +13,12 @@ import { ConfirmButton } from '@/shared/components';
 import { useActiveSession, useActiveSessionStore } from '@/shared/hooks';
 import { useLocale } from '@/shared/i18n/context';
 import { trainingTypeStyles } from '@/utils';
-import { buildExerciseRows } from '../../lib/plan-progress';
+import { buildExerciseRows, groupPairedRows } from '../../lib/plan-progress';
 import { AddSessionExerciseCard } from './add-session-exercise-card';
 import { DEFAULT_REST_SECONDS } from './constants';
 import { ExerciseLogCard } from './exercise-log-card';
 import { formatDuration } from './format-duration';
+import { PairedExerciseLogCard } from './paired-exercise-log-card';
 import { useCountdown, useElapsedTime } from './use-timers';
 
 export function SessionDetail({
@@ -141,6 +143,41 @@ export function SessionDetail({
     router.refresh();
   };
 
+  const pairSessionExercise = useMutation({
+    mutationFn: async ({
+      exerciseId,
+      pairWithExerciseId,
+    }: {
+      exerciseId: string;
+      pairWithExerciseId: string;
+    }) => {
+      const result = await apiClient.training.pairSessionExercise({
+        params: { sessionId: session.id },
+        body: { exerciseId, pairWithExerciseId },
+      });
+      return unwrapResult(result, 200);
+    },
+    onSuccess: () => router.refresh(),
+  });
+
+  const handleExerciseDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    pairSessionExercise.mutate({
+      exerciseId: String(active.id),
+      pairWithExerciseId: String(over.id),
+    });
+  };
+
+  // A plain click on a nested button (pair, delete, rest badge) is a
+  // pointer-down + pointer-up at the same spot — require real movement
+  // before it counts as a drag, or dnd-kit's pointer capture swallows those
+  // clicks (confirmed live: a plain click was mis-registered as a
+  // zero-distance drag-and-drop and the click never reached the button).
+  const exerciseDragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
   return (
     <Stack gap="lg" className="pb-24">
       <Link
@@ -210,20 +247,44 @@ export function SessionDetail({
           <Text tone="muted">{dict.sessionDetail.noSets}</Text>
         </Card>
       ) : (
-        <Stack gap="sm">
-          <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
-            {dict.activeTracking.loggedExercises}
-          </Text>
-          {rows.map((row) => (
-            <ExerciseLogCard
-              key={row.key}
-              sessionId={session.id}
-              row={row}
-              onSetLogged={handleSetLogged}
-              onChanged={() => router.refresh()}
-            />
-          ))}
-        </Stack>
+        <DndContext
+          id="session-exercises-dnd"
+          sensors={exerciseDragSensors}
+          onDragEnd={handleExerciseDragEnd}
+        >
+          <Stack gap="sm">
+            <Text tone="muted" variant="caption" className="font-data tracking-widest uppercase">
+              {dict.activeTracking.loggedExercises}
+            </Text>
+            {groupPairedRows(rows).map((entry) =>
+              Array.isArray(entry) ? (
+                <PairedExerciseLogCard
+                  key={`${entry[0].key}+${entry[1].key}`}
+                  sessionId={session.id}
+                  rowA={entry[0]}
+                  rowB={entry[1]}
+                  onSetLogged={handleSetLogged}
+                  onChanged={() => router.refresh()}
+                />
+              ) : (
+                <ExerciseLogCard
+                  key={entry.key}
+                  sessionId={session.id}
+                  row={entry}
+                  otherRows={rows.filter((other) => other.key !== entry.key && !other.pairGroupId)}
+                  onSetLogged={handleSetLogged}
+                  onChanged={() => router.refresh()}
+                  onPaired={() => router.refresh()}
+                />
+              ),
+            )}
+          </Stack>
+        </DndContext>
+      )}
+      {pairSessionExercise.isError && (
+        <Text tone="destructive" variant="caption">
+          {pairSessionExercise.error.message}
+        </Text>
       )}
 
       <AddSessionExerciseCard

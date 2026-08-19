@@ -47,10 +47,17 @@ export const trainingSessionExercises = pgTable(
     // rest duration the next time this exercise is logged.
     restSeconds: integer('rest_seconds'),
     position: integer('position').notNull(),
+    pairGroupId: uuid('pair_group_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('training_session_exercises_sessionId_idx').on(table.sessionId)],
+  (table) => [
+    index('training_session_exercises_sessionId_idx').on(table.sessionId),
+    index('training_session_exercises_sessionId_pairGroupId_idx').on(
+      table.sessionId,
+      table.pairGroupId,
+    ),
+  ],
 );
 
 export const trainingSessionSets = pgTable(
