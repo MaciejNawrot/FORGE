@@ -1,8 +1,6 @@
 import { Card, Stack, Text } from '@acme/ui';
-import { useMutation } from '@tanstack/react-query';
 import { Timer, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { apiClient, unwrapResult } from '@/shared/api';
 import { ConfirmButton } from '@/shared/components';
 import { useLocale } from '@/shared/i18n/context';
 import type { SessionExerciseRow } from '../../lib/plan-progress';
@@ -11,6 +9,7 @@ import { DEFAULT_REST_SECONDS } from './constants';
 import { formatDuration } from './format-duration';
 import { EditableNumber } from './number-inputs';
 import { PlannedSetRow } from './planned-set-row';
+import { useExerciseLogMutations } from './use-exercise-log-mutations';
 
 export function ExerciseLogCard({
   sessionId,
@@ -34,71 +33,11 @@ export function ExerciseLogCard({
   const [draftRestSeconds, setDraftRestSeconds] = useState(DEFAULT_REST_SECONDS);
   const flushedDraftRef = useRef(false);
 
-  const updateNotes = useMutation({
-    mutationFn: async (notes: string | null) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.updateSessionExerciseNotes({
-        params: { sessionId, exerciseId: loggedExercise.id },
-        body: { notes },
-      });
-      return unwrapResult(result, 200);
-    },
-    onSuccess: onChanged,
-  });
-
-  const updateRest = useMutation({
-    mutationFn: async (value: number) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.updateSessionExerciseRest({
-        params: { sessionId, exerciseId: loggedExercise.id },
-        body: { restSeconds: value },
-      });
-      return unwrapResult(result, 200);
-    },
-    onSuccess: onChanged,
-  });
-
-  const updateSet = useMutation({
-    mutationFn: async ({
-      setId,
-      reps,
-      weightKg,
-    }: {
-      setId: string;
-      reps: number;
-      weightKg: number | null;
-    }) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.updateSessionSet({
-        params: { sessionId, exerciseId: loggedExercise.id, setId },
-        body: { reps, weightKg },
-      });
-      return unwrapResult(result, 200);
-    },
-    onSuccess: onChanged,
-  });
-
-  const removeSet = useMutation({
-    mutationFn: async (setId: string) => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.removeSessionSet({
-        params: { sessionId, exerciseId: loggedExercise.id, setId },
-      });
-      unwrapResult(result, 204);
-    },
-    onSuccess: onChanged,
-  });
-
-  const removeExercise = useMutation({
-    mutationFn: async () => {
-      if (!loggedExercise) throw new Error('No logged exercise yet');
-      const result = await apiClient.training.removeSessionExercise({
-        params: { sessionId, exerciseId: loggedExercise.id },
-      });
-      unwrapResult(result, 204);
-    },
-    onSuccess: onChanged,
-  });
+  const { updateNotes, updateRest, updateSet, removeSet, removeExercise } = useExerciseLogMutations(
+    sessionId,
+    loggedExercise,
+    onChanged,
+  );
 
   const loggedSets = loggedExercise?.sets ?? [];
   const lastSet = loggedSets[loggedSets.length - 1];
