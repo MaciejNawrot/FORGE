@@ -8,6 +8,7 @@ import {
   lastPerformanceEntrySchema,
   lastPerformanceQuerySchema,
   listTrainingSessionsQuerySchema,
+  pairSessionExerciseInputSchema,
   sessionIdParamsSchema,
   trainingSessionExerciseParamsSchema,
   trainingSessionExerciseSchema,
@@ -139,5 +140,32 @@ export const trainingContract = c.router({
     body: c.noBody(),
     responses: { 204: c.noBody(), 401: errorResponseSchema, 404: errorResponseSchema },
     summary: 'Remove an exercise (and all its sets) from a training session',
+  },
+  pairSessionExercise: {
+    method: 'PATCH',
+    path: '/training-sessions/:sessionId/exercises/pair',
+    pathParams: sessionIdParamsSchema,
+    body: pairSessionExerciseInputSchema,
+    responses: {
+      200: trainingSessionExerciseSchema,
+      400: errorResponseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary:
+      'Pair two exercises in a session into a superset (materializes either side that has no logged set yet)',
+  },
+  unpairSessionExercise: {
+    method: 'DELETE',
+    path: '/training-sessions/:sessionId/exercises/:exerciseId/pair',
+    pathParams: trainingSessionExerciseParamsSchema,
+    body: c.noBody(),
+    responses: {
+      200: trainingSessionExerciseSchema,
+      400: errorResponseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Unpair a logged exercise from its superset partner',
   },
 });

@@ -4,6 +4,7 @@ import { errorResponseSchema } from '../schemas/error.schema.js';
 import {
   createWorkoutExerciseInputSchema,
   createWorkoutPlanInputSchema,
+  pairWorkoutExerciseInputSchema,
   planIdParamsSchema,
   updateWorkoutExerciseInputSchema,
   updateWorkoutPlanInputSchema,
@@ -95,5 +96,31 @@ export const workoutsContract = c.router({
     body: c.noBody(),
     responses: { 204: c.noBody(), 401: errorResponseSchema, 404: errorResponseSchema },
     summary: 'Remove an exercise from a workout plan',
+  },
+  pairExercise: {
+    method: 'PATCH',
+    path: '/workout-plans/:planId/exercises/:exerciseId/pair',
+    pathParams: workoutExerciseParamsSchema,
+    body: pairWorkoutExerciseInputSchema,
+    responses: {
+      200: workoutExerciseSchema,
+      400: errorResponseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Pair two exercises in a plan into a superset',
+  },
+  unpairExercise: {
+    method: 'DELETE',
+    path: '/workout-plans/:planId/exercises/:exerciseId/pair',
+    pathParams: workoutExerciseParamsSchema,
+    body: c.noBody(),
+    responses: {
+      200: workoutExerciseSchema,
+      400: errorResponseSchema,
+      401: errorResponseSchema,
+      404: errorResponseSchema,
+    },
+    summary: 'Unpair an exercise from its superset partner',
   },
 });

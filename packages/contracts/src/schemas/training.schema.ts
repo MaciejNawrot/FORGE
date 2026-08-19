@@ -24,6 +24,7 @@ export const trainingSessionExerciseSchema = z.object({
   notes: z.string().max(2000).nullable(),
   restSeconds: z.number().int().min(0).nullable(),
   position: z.number().int().min(0),
+  pairGroupId: z.string().uuid().nullable(),
   sets: z.array(trainingSessionSetSchema),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -52,6 +53,12 @@ export const updateSessionExerciseRestInputSchema = z.object({
   restSeconds: z.number().int().min(0),
 });
 export type UpdateSessionExerciseRestInput = z.infer<typeof updateSessionExerciseRestInputSchema>;
+
+export const pairSessionExerciseInputSchema = z.object({
+  exerciseId: z.string().uuid(),
+  pairWithExerciseId: z.string().uuid(),
+});
+export type PairSessionExerciseInput = z.infer<typeof pairSessionExerciseInputSchema>;
 
 export const trainingSessionSchema = z.object({
   id: z.string().uuid(),
