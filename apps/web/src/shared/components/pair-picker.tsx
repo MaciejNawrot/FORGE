@@ -6,14 +6,14 @@ import { useState } from 'react';
 
 export function PairPicker({
   items,
-  onSelect,
+  onPick,
   title,
   emptyLabel,
   children,
   ...buttonProps
 }: {
   items: { id: string; name: string }[];
-  onSelect: (id: string) => void;
+  onPick: (id: string) => void;
   title: string;
   emptyLabel: string;
 } & Omit<ButtonProps, 'onClick'>) {
@@ -35,7 +35,7 @@ export function PairPicker({
                 key={item.id}
                 type="button"
                 onClick={() => {
-                  onSelect(item.id);
+                  onPick(item.id);
                   setOpen(false);
                 }}
                 className="hover:bg-accent rounded-md px-3 py-2 text-left transition-colors"
