@@ -7,7 +7,13 @@ import type {
   TrainingSessionWithExercises,
 } from '@acme/contracts';
 import { Injectable } from '@nestjs/common';
+import { PairConflictError } from '../../common/errors/pair-conflict.error.js';
 import { TrainingRepository } from './training.repository.js';
+
+export type PairSessionExerciseResult =
+  | { outcome: 'ok'; exercise: TrainingSessionExercise }
+  | { outcome: 'not-found' }
+  | { outcome: 'conflict'; message: string };
 
 @Injectable()
 export class TrainingService {
@@ -177,5 +183,82 @@ export class TrainingService {
       const entry = map.get(exerciseId);
       return entry ? [{ exerciseId, ...entry }] : [];
     });
+  }
+
+  /** Pairs two exercises into a superset. Either side that hasn't had a set
+   * logged yet is materialized first (same get-or-create as `addExercise`). */
+  async pairExercise(
+    sessionId: string,
+    userId: string,
+    exerciseId: string,
+    pairWithExerciseId: string,
+  ): Promise<PairSessionExerciseResult> {
+    const session = await this.trainingRepository.findSessionById(sessionId, userId);
+    if (!session) return { outcome: 'not-found' };
+    if (exerciseId === pairWithExerciseId) {
+      return { outcome: 'conflict', message: 'Cannot pair an exercise with itself' };
+    }
+
+    const existingPrimary = await this.trainingRepository.findGroupByExercise(
+      sessionId,
+      exerciseId,
+    );
+    const existingPartner = await this.trainingRepository.findGroupByExercise(
+      sessionId,
+      pairWithExerciseId,
+    );
+    if (existingPrimary?.pairGroupId || existingPartner?.pairGroupId) {
+      return { outcome: 'conflict', message: 'One of these exercises is already paired' };
+    }
+
+    const groupId = await this.trainingRepository.withTransaction(async (tx) => {
+      let primary = existingPrimary;
+      if (!primary) {
+        const position = await this.trainingRepository.nextPosition(sessionId, tx);
+        primary = await this.trainingRepository.createExerciseGroup(
+          { sessionId, exerciseId, position },
+          tx,
+        );
+      }
+      let partner = existingPartner;
+      if (!partner) {
+        const position = await this.trainingRepository.nextPosition(sessionId, tx);
+        partner = await this.trainingRepository.createExerciseGroup(
+          { sessionId, exerciseId: pairWithExerciseId, position },
+          tx,
+        );
+      }
+      return this.trainingRepository.linkPairGroup(sessionId, primary, partner, tx);
+    });
+
+    const exercise = await this.trainingRepository.findSessionExerciseById(groupId, sessionId);
+    if (!exercise) throw new Error('Row vanished after being paired');
+    return { outcome: 'ok', exercise };
+  }
+
+  async unpairExercise(
+    sessionId: string,
+    exerciseLogId: string,
+    userId: string,
+  ): Promise<PairSessionExerciseResult> {
+    const session = await this.trainingRepository.findSessionById(sessionId, userId);
+    if (!session) return { outcome: 'not-found' };
+
+    let updated: Awaited<ReturnType<typeof this.trainingRepository.unpairSessionExercise>>;
+    try {
+      updated = await this.trainingRepository.unpairSessionExercise(sessionId, exerciseLogId);
+    } catch (error) {
+      if (error instanceof PairConflictError)
+        return { outcome: 'conflict', message: error.message };
+      throw error;
+    }
+    if (!updated) return { outcome: 'not-found' };
+
+    const exercise = await this.trainingRepository.findSessionExerciseById(
+      exerciseLogId,
+      sessionId,
+    );
+    if (!exercise) return { outcome: 'not-found' };
+    return { outcome: 'ok', exercise };
   }
 }

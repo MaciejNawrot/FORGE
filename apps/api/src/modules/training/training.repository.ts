@@ -15,8 +15,9 @@ import {
   trainingSessions,
 } from '@acme/db';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, gte, inArray, lte, max } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, lt, lte, max, sql } from 'drizzle-orm';
 import { DATABASE } from '../../common/database/database.module.js';
+import { PairConflictError } from '../../common/errors/pair-conflict.error.js';
 
 export type TrainingSessionExerciseWithExercise = TrainingSessionExerciseRow & {
   exercise: ExerciseRow;
@@ -120,6 +121,7 @@ export class TrainingRepository {
         notes: trainingSessionExercises.notes,
         restSeconds: trainingSessionExercises.restSeconds,
         position: trainingSessionExercises.position,
+        pairGroupId: trainingSessionExercises.pairGroupId,
         createdAt: trainingSessionExercises.createdAt,
         updatedAt: trainingSessionExercises.updatedAt,
         exercise: exercises,
@@ -143,6 +145,7 @@ export class TrainingRepository {
         notes: trainingSessionExercises.notes,
         restSeconds: trainingSessionExercises.restSeconds,
         position: trainingSessionExercises.position,
+        pairGroupId: trainingSessionExercises.pairGroupId,
         createdAt: trainingSessionExercises.createdAt,
         updatedAt: trainingSessionExercises.updatedAt,
         exercise: exercises,
@@ -170,8 +173,9 @@ export class TrainingRepository {
   async findGroupByExercise(
     sessionId: string,
     exerciseId: string,
+    dbClient: DbClient = this.db,
   ): Promise<TrainingSessionExerciseRow | undefined> {
-    const [row] = await this.db
+    const [row] = await dbClient
       .select()
       .from(trainingSessionExercises)
       .where(
@@ -343,5 +347,82 @@ export class TrainingRepository {
       }
     }
     return result;
+  }
+
+  async findGroupById(
+    id: string,
+    sessionId: string,
+    dbClient: DbClient = this.db,
+  ): Promise<TrainingSessionExerciseRow | undefined> {
+    const [row] = await dbClient
+      .select()
+      .from(trainingSessionExercises)
+      .where(
+        and(eq(trainingSessionExercises.id, id), eq(trainingSessionExercises.sessionId, sessionId)),
+      )
+      .limit(1);
+    return row;
+  }
+
+  /** Tags `primary` and `partner` with a fresh shared `pairGroupId`,
+   * repositioning the later one to sit immediately after the earlier one
+   * (shifting anything between them by one). Returns `primary.id`. */
+  async linkPairGroup(
+    sessionId: string,
+    primary: TrainingSessionExerciseRow,
+    partner: TrainingSessionExerciseRow,
+    dbClient: DbClient = this.db,
+  ): Promise<string> {
+    const [first, second] =
+      primary.position < partner.position ? [primary, partner] : [partner, primary];
+    const groupId = crypto.randomUUID();
+
+    if (second.position !== first.position + 1) {
+      await dbClient
+        .update(trainingSessionExercises)
+        .set({ position: sql`${trainingSessionExercises.position} + 1` })
+        .where(
+          and(
+            eq(trainingSessionExercises.sessionId, sessionId),
+            gt(trainingSessionExercises.position, first.position),
+            lt(trainingSessionExercises.position, second.position),
+          ),
+        );
+    }
+
+    await dbClient
+      .update(trainingSessionExercises)
+      .set({ pairGroupId: groupId, updatedAt: new Date() })
+      .where(eq(trainingSessionExercises.id, first.id));
+    await dbClient
+      .update(trainingSessionExercises)
+      .set({ pairGroupId: groupId, position: first.position + 1, updatedAt: new Date() })
+      .where(eq(trainingSessionExercises.id, second.id));
+
+    return primary.id;
+  }
+
+  /** Clears the pairing tag from a session exercise and its partner.
+   * Returns `undefined` if `exerciseId` isn't in this session. Throws
+   * `PairConflictError` if it isn't currently paired. */
+  async unpairSessionExercise(
+    sessionId: string,
+    exerciseId: string,
+  ): Promise<TrainingSessionExerciseRow | undefined> {
+    const row = await this.findGroupById(exerciseId, sessionId);
+    if (!row) return undefined;
+    if (!row.pairGroupId) throw new PairConflictError('This exercise is not paired');
+
+    await this.db
+      .update(trainingSessionExercises)
+      .set({ pairGroupId: null, updatedAt: new Date() })
+      .where(
+        and(
+          eq(trainingSessionExercises.sessionId, sessionId),
+          eq(trainingSessionExercises.pairGroupId, row.pairGroupId),
+        ),
+      );
+
+    return this.findGroupById(exerciseId, sessionId);
   }
 }

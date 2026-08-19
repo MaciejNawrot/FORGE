@@ -120,6 +120,37 @@ export class TrainingController {
         if (!removed) return { status: 404, body: { message: 'Exercise not found' } };
         return { status: 204, body: undefined };
       },
+
+      pairSessionExercise: async ({ params, body }) => {
+        const result = await this.trainingService.pairExercise(
+          params.sessionId,
+          userId,
+          body.exerciseId,
+          body.pairWithExerciseId,
+        );
+        if (result.outcome === 'not-found') {
+          return { status: 404, body: { message: 'Training session not found' } };
+        }
+        if (result.outcome === 'conflict') {
+          return { status: 400, body: { message: result.message } };
+        }
+        return { status: 200, body: result.exercise };
+      },
+
+      unpairSessionExercise: async ({ params }) => {
+        const result = await this.trainingService.unpairExercise(
+          params.sessionId,
+          params.exerciseId,
+          userId,
+        );
+        if (result.outcome === 'not-found') {
+          return { status: 404, body: { message: 'Exercise not found' } };
+        }
+        if (result.outcome === 'conflict') {
+          return { status: 400, body: { message: result.message } };
+        }
+        return { status: 200, body: result.exercise };
+      },
     });
   }
 }
