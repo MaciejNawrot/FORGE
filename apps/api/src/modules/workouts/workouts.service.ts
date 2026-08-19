@@ -9,7 +9,13 @@ import type {
   WorkoutPlanWithExercises,
 } from '@acme/contracts';
 import { Injectable } from '@nestjs/common';
+import { PairConflictError } from '../../common/errors/pair-conflict.error.js';
 import { WorkoutsRepository } from './workouts.repository.js';
+
+export type PairExerciseResult =
+  | { outcome: 'ok'; exercise: WorkoutExercise }
+  | { outcome: 'not-found' }
+  | { outcome: 'conflict'; message: string };
 
 @Injectable()
 export class WorkoutsService {
@@ -93,5 +99,55 @@ export class WorkoutsService {
     const plan = await this.workoutsRepository.findPlanById(planId, userId);
     if (!plan) return false;
     return this.workoutsRepository.removeExercise(exerciseId, planId);
+  }
+
+  async pairExercise(
+    planId: string,
+    exerciseId: string,
+    userId: string,
+    pairWithExerciseId: string,
+  ): Promise<PairExerciseResult> {
+    const plan = await this.workoutsRepository.findPlanById(planId, userId);
+    if (!plan) return { outcome: 'not-found' };
+    if (exerciseId === pairWithExerciseId) {
+      return { outcome: 'conflict', message: 'Cannot pair an exercise with itself' };
+    }
+
+    let updated: Awaited<ReturnType<typeof this.workoutsRepository.pairExercises>>;
+    try {
+      updated = await this.workoutsRepository.pairExercises(planId, exerciseId, pairWithExerciseId);
+    } catch (error) {
+      if (error instanceof PairConflictError)
+        return { outcome: 'conflict', message: error.message };
+      throw error;
+    }
+    if (!updated) return { outcome: 'not-found' };
+
+    const exercise = await this.workoutsRepository.findExerciseById(updated.id, planId);
+    if (!exercise) return { outcome: 'not-found' };
+    return { outcome: 'ok', exercise };
+  }
+
+  async unpairExercise(
+    planId: string,
+    exerciseId: string,
+    userId: string,
+  ): Promise<PairExerciseResult> {
+    const plan = await this.workoutsRepository.findPlanById(planId, userId);
+    if (!plan) return { outcome: 'not-found' };
+
+    let updated: Awaited<ReturnType<typeof this.workoutsRepository.unpairExercise>>;
+    try {
+      updated = await this.workoutsRepository.unpairExercise(planId, exerciseId);
+    } catch (error) {
+      if (error instanceof PairConflictError)
+        return { outcome: 'conflict', message: error.message };
+      throw error;
+    }
+    if (!updated) return { outcome: 'not-found' };
+
+    const exercise = await this.workoutsRepository.findExerciseById(updated.id, planId);
+    if (!exercise) return { outcome: 'not-found' };
+    return { outcome: 'ok', exercise };
   }
 }

@@ -82,6 +82,37 @@ export class WorkoutsController {
         if (!removed) return { status: 404, body: { message: 'Exercise not found' } };
         return { status: 204, body: undefined };
       },
+
+      pairExercise: async ({ params, body }) => {
+        const result = await this.workoutsService.pairExercise(
+          params.planId,
+          params.exerciseId,
+          userId,
+          body.pairWithExerciseId,
+        );
+        if (result.outcome === 'not-found') {
+          return { status: 404, body: { message: 'Exercise not found' } };
+        }
+        if (result.outcome === 'conflict') {
+          return { status: 400, body: { message: result.message } };
+        }
+        return { status: 200, body: result.exercise };
+      },
+
+      unpairExercise: async ({ params }) => {
+        const result = await this.workoutsService.unpairExercise(
+          params.planId,
+          params.exerciseId,
+          userId,
+        );
+        if (result.outcome === 'not-found') {
+          return { status: 404, body: { message: 'Exercise not found' } };
+        }
+        if (result.outcome === 'conflict') {
+          return { status: 400, body: { message: result.message } };
+        }
+        return { status: 200, body: result.exercise };
+      },
     });
   }
 }
